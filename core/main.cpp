@@ -150,6 +150,8 @@ int main(int argc,char **argv)
 		config_run__(tick++);
 		pthread_mutex_unlock(&bufferLock); //unlock mutex
 
+		updateBuffers();
+
 		sleep_until(&timer_start, OPLC_CYCLE);
 	}
 }
