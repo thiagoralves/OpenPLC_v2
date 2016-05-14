@@ -155,7 +155,14 @@ void Modbus::ReadDiscreteInputs()
 			int position = Start + i * 8 + j;
 			if (position < BUFFER_SIZE)
 			{
-				bitWrite(ByteArray[9 + i], j, (bool_input[0][position] != NULL)? *bool_input[0][position] : 0);
+				if (bool_input[0][position] != NULL)
+				{
+					bitWrite(ByteArray[9 + i], j, *bool_input[0][position]);
+				}
+				else
+				{
+					bitWrite(ByteArray[9 + i], j, 0);
+				}
 			}
 			else //invalid address
 			{
@@ -194,8 +201,16 @@ void Modbus::ReadHoldingRegisters()
 		int position = Start + i;
 		if (position < BUFFER_SIZE)
 		{
-			ByteArray[ 9 + i * 2] = highByte((int_output[0][position] != NULL)? *int_output[0][position] : 0);
-			ByteArray[10 + i * 2] =  lowByte((int_output[0][position] != NULL)? *int_output[0][position] : 0);
+			if (int_output[0][position] != NULL)
+			{
+				ByteArray[ 9 + i * 2] = highByte(*int_output[0][position]);
+				ByteArray[10 + i * 2] =  lowByte(*int_output[0][position]);
+			}
+			else
+			{
+				ByteArray[ 9 + i * 2] = highByte(0);
+				ByteArray[10 + i * 2] =  lowByte(0);
+			}
 		}
 		else //invalid address
 		{
@@ -233,8 +248,16 @@ void Modbus::ReadInputRegisters()
 		int position = Start + i;
 		if (position < BUFFER_SIZE)
 		{
-			ByteArray[ 9 + i * 2] = highByte((int_input[0][position] != NULL)? *int_input[0][position] : 0);
-			ByteArray[10 + i * 2] =  lowByte((int_input[0][position] != NULL)? *int_input[0][position] : 0);
+			if (int_input[0][position] != NULL)
+			{
+				ByteArray[ 9 + i * 2] = highByte(*int_input[0][position]);
+				ByteArray[10 + i * 2] =  lowByte(*int_input[0][position]);
+			}
+			else
+			{
+				ByteArray[ 9 + i * 2] = highByte(0);
+				ByteArray[10 + i * 2] =  lowByte(0);
+			}
 		}
 		else //invalid address
 		{
@@ -267,10 +290,16 @@ void Modbus::WriteCoil()
 		pthread_mutex_lock(&bufferLock);
 		if (bool_output[0][Start] != NULL)
 		{
-			int value = word(ByteArray[10],ByteArray[11]) > 0;
-			printf("Setting up coil %d with value %d\n", Start, value);
-			*bool_output[0][Start] = word(ByteArray[10],ByteArray[11]) > 0;
-			printf("Reading from *bool_output[0][%d]: %d\n", Start, *bool_output[0][Start]);
+			unsigned char value;
+			if (word(ByteArray[10],ByteArray[11]) > 0)
+			{
+				value = 1;
+			}
+			else
+			{
+				value = 0;
+			}
+			*bool_output[0][Start] = value;
 		}
 		pthread_mutex_unlock(&bufferLock);
 	}
