@@ -152,6 +152,8 @@ int main(int argc,char **argv)
 
 		updateBuffers();
 
+		updateTime();
+
 		sleep_until(&timer_start, OPLC_CYCLE);
 	}
 }
