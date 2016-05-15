@@ -206,7 +206,18 @@ void glueVar(char *varName, char *varType)
 
 void generateBottom()
 {
-	glueVars << "}";
+	glueVars << "}\r\n\
+\r\n\
+void updateTime()\r\n\
+{\r\n\
+	__CURRENT_TIME.tv_nsec += 50000000;\r\n\
+\r\n\
+	if (__CURRENT_TIME.tv_nsec >= 1000000000)\r\n\
+	{\r\n\
+		__CURRENT_TIME.tv_nsec -= 1000000000;\r\n\
+		__CURRENT_TIME.tv_sec += 1;\r\n\
+	}\r\n\
+}";
 }
 
 int main()
