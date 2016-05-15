@@ -96,6 +96,7 @@ void config_init__(void);
 
 //glueVars.cpp
 void glueVars();
+void updateTime();
 
 //hardware_layer.cpp
 void initializeHardware();
