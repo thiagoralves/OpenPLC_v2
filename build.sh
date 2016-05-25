@@ -47,16 +47,30 @@ select opt in $OPTIONS; do
 		cd ..
 		./build_core.sh
 		exit
-	elif [ "$opt" = "Simulink" ]; then
-		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
+	elif [ "$opt" = "UniPi" ]; then
+		cp ./hardware_layers/unipi.cpp ./hardware_layer.cpp
 		cp ./core_builders/build_linux.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
 		exit
-	elif [ "$opt" = "Unipi" ]; then
-		cp ./hardware_layers/unipi.cpp ./hardware_layer.cpp
+	elif [ "$opt" = "Arduino" ]; then
+		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
 		cp ./core_builders/build_rpi.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
+		exit
+	elif [ "$opt" = "Arduino on RaspberryPi" ]; then
+		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_rpi.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
+		exit
+	elif [ "$opt" = "Simulink" ]; then
+		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_linux.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
