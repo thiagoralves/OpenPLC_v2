@@ -34,6 +34,10 @@
 #include <string.h>
 #include <pthread.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <stdlib.h>
 
 #include "ladder.h"
 
@@ -268,19 +272,22 @@ bool parseBuffer(uint8_t *buf, int bufSize)
 }
 
 //-----------------------------------------------------------------------------
-// Receive a packet from the IO board
+// Receive a packet from the IO board. Returns TRUE in case of success and
+// FALSE in case of any error.
 //-----------------------------------------------------------------------------
-void receivePacket()
+bool receivePacket()
 {
 	uint8_t receiveBuffer[100];
 	int response = read(serial_fd, receiveBuffer, 100);
 	if (response == -1)
 	{
 		printf("Couldn't read from IO\n");
+		return 0;
 	}
 	else if (response == 0)
 	{
 		printf("No response from IO\n");
+		return 0;
 	}
 	else
 	{
@@ -302,8 +309,12 @@ void receivePacket()
 			pthread_mutex_lock(&ioLock);
 			memcpy(dataPointer, receiveBuffer, sizeof(struct OPLC_input));
 			pthread_mutex_unlock(&ioLock);
+
+			return 1;
 		}
 	}
+
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -314,11 +325,133 @@ void *exchangeData(void *arg)
 	while(1)
 	{
 		sendPacket();
-		sleep_ms(1);
 		receivePacket();
 
 		sleep_ms(30);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Verify if there are serial ports on the system
+//-----------------------------------------------------------------------------
+bool verifySerialPortsAvailable()
+{
+	DIR *dir = opendir("/dev/serial");
+	if (dir)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// getSerialPorts() gives us symbolic links. We must find the absolute path
+// for the serial ports.
+//-----------------------------------------------------------------------------
+void normalizePath(char *portName)
+{
+	char linkPath[1000];
+	char finalPath[1000];
+	strcpy(linkPath, "/dev/serial/by-path/");
+	strcat(linkPath, portName);
+
+	//Remove the last character from linkPath (it's a space char)
+	int i;
+	for (i = 0; linkPath[i] != '\0'; i++);
+	linkPath[i-1] = '\0';
+
+	ssize_t linkSize = readlink(linkPath, finalPath, 1000);
+	if (linkSize < 0)
+	{
+		printf("Error obtaining path from the symbolic link\n");
+		return;
+	}
+	finalPath[linkSize] = '\0';
+
+	//Since readlink usually gives a relative path
+	//we must rebuild the path manually
+	int latestBarPosition = 0;
+	for (i = 0; finalPath[i] != '\0'; i++)
+	{
+		if (finalPath[i] == '/')
+			latestBarPosition = i;
+	}
+	latestBarPosition++; //start from the first character after the '/'
+
+	strcpy(portName, "/dev/");
+	int j = 5;
+	for (i = latestBarPosition; finalPath[i] != '\0'; i++)
+	{
+		portName[j] = finalPath[i];
+		j++;
+		portName[j] = '\0';
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Get the name of each port found
+//-----------------------------------------------------------------------------
+void getSerialPorts(char **portsList)
+{
+	FILE *fp;
+	char ports[1000];
+
+	fp = popen("/bin/ls /dev/serial/by-path", "r");
+	if (fp == NULL)
+	{
+		printf("Failed to find serial ports\n" );
+	}
+
+	int i = 0;
+	while (fgets(ports, sizeof(ports)-1, fp) != NULL)
+	{
+		printf("Port found: %s", ports);
+		normalizePath(ports);
+		strncpy(portsList[i], ports, 1000);
+		i++;
+	}
+
+	pclose(fp);
+}
+
+//-----------------------------------------------------------------------------
+// Test if *portName is the correct serial port
+//-----------------------------------------------------------------------------
+bool testPort(char *portName)
+{
+	printf("Trying to open %s\n", portName);
+    serial_fd = serialport_init(portName, 115200);
+    if (serial_fd < 0) return 0;
+
+    for (int i = 0; i < 5; i++) //try at least 5 times
+    {
+    	sendPacket();
+		if (receivePacket()) return 1;
+
+		sleep_ms(30);
+    }
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Call testPort() for each port in **portsList in order to find the correct
+// serial port
+//-----------------------------------------------------------------------------
+int findCorrectPort(char **portsList)
+{
+    int portsIndex = 0;
+
+    while (portsList[portsIndex][0] != '\0')
+    {
+    	if (testPort(portsList[portsIndex]))
+    		return portsIndex;
+
+		portsIndex++;
+    }
+	printf("Couldn't find any suitable port\n");
+    return -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -327,10 +460,27 @@ void *exchangeData(void *arg)
 //-----------------------------------------------------------------------------
 void initializeHardware()
 {
-	serial_fd = serialport_init("/dev/ttyACM0", 115200);
-	sleep_ms(100);
-	pthread_t thread;
-	pthread_create(&thread, NULL, exchangeData, NULL);
+	char **portsList;
+	portsList = new char *[30];
+	for(int i = 0; i < 30; i++)
+	{
+    	portsList[i] = new char[1000];
+    	memset(portsList[i],0,sizeof(portsList[i]));
+	}
+
+	if (verifySerialPortsAvailable())
+	{
+		getSerialPorts(portsList);
+		int portId = findCorrectPort(portsList);
+
+		if (portId != -1)
+		{
+			serial_fd = serialport_init(portsList[portId], 115200);
+			sleep_ms(100);
+			pthread_t thread;
+			pthread_create(&thread, NULL, exchangeData, NULL);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
