@@ -182,13 +182,13 @@ void updateBuffers()
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	for (int i = 0; i < MAX_INPUT; i++)
 	{
-		if (bool_input[0][i] != NULL) *bool_input[0][i] = !digitalRead(inputPinMask[i]); //printf("[IO%d]: %d | ", i, !digitalRead(inputPinMask[i]));
+		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = !digitalRead(inputPinMask[i]); //printf("[IO%d]: %d | ", i, !digitalRead(inputPinMask[i]));
 	}
 
 	//printf("\nDigital Outputs:\n");
 	for (int i = 0; i < MAX_OUTPUT; i++)
 	{
-		if (bool_output[0][i] != NULL) digitalWrite(DOUT_PINBASE + i, *bool_output[0][i]); //printf("[IO%d]: %d | ", i, digitalRead(DOUT_PINBASE + i));
+		if (bool_output[i/8][i%8] != NULL) digitalWrite(DOUT_PINBASE + i, *bool_output[i/8][i%8]); //printf("[IO%d]: %d | ", i, digitalRead(DOUT_PINBASE + i));
 	}
 
 	//printf("\nAnalog Inputs:");
