@@ -421,18 +421,19 @@ void getSerialPorts(char **portsList)
 bool testPort(char *portName)
 {
 	printf("Trying to open %s\n", portName);
-    serial_fd = serialport_init(portName, 115200);
-    if (serial_fd < 0) return 0;
-
-    for (int i = 0; i < 5; i++) //try at least 5 times
-    {
-    	sendPacket();
+	serial_fd = serialport_init(portName, 115200);
+	if (serial_fd < 0) return 0;
+	
+	for (int i = 0; i < 5; i++) //try at least 5 times
+	{
+		sendPacket();
+		sleep_ms(100);
 		if (receivePacket()) return 1;
-
+		
 		sleep_ms(30);
-    }
-
-    return 0;
+	}
+	
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
