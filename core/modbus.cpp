@@ -103,11 +103,11 @@ void Modbus::ReadCoils()
 		for(int j = 0; j < 8; j++)
 		{
 			int position = Start + i * 8 + j;
-			if (position < BUFFER_SIZE)
+			if (position < (BUFFER_SIZE*BUFFER_SIZE))
 			{
-				if (bool_output[0][position] != NULL)
+				if (bool_output[position/8][position%8] != NULL)
 				{
-					bitWrite(ByteArray[9 + i], j, *bool_output[0][position]);
+					bitWrite(ByteArray[9 + i], j, *bool_output[position/8][position%8]);
 				}
 				else
 				{
@@ -153,11 +153,11 @@ void Modbus::ReadDiscreteInputs()
 		for(int j = 0; j < 8; j++)
 		{
 			int position = Start + i * 8 + j;
-			if (position < BUFFER_SIZE)
+			if (position < (BUFFER_SIZE*BUFFER_SIZE))
 			{
-				if (bool_input[0][position] != NULL)
+				if (bool_input[position/8][position%8] != NULL)
 				{
-					bitWrite(ByteArray[9 + i], j, *bool_input[0][position]);
+					bitWrite(ByteArray[9 + i], j, *bool_input[position/8][position%8]);
 				}
 				else
 				{
@@ -285,10 +285,10 @@ void Modbus::WriteCoil()
 
 	Start = word(ByteArray[8],ByteArray[9]);
 
-	if (Start < BUFFER_SIZE)
+	if (Start < (BUFFER_SIZE*BUFFER_SIZE))
 	{
 		pthread_mutex_lock(&bufferLock);
-		if (bool_output[0][Start] != NULL)
+		if (bool_output[Start/8][Start%8] != NULL)
 		{
 			unsigned char value;
 			if (word(ByteArray[10],ByteArray[11]) > 0)
@@ -299,7 +299,7 @@ void Modbus::WriteCoil()
 			{
 				value = 0;
 			}
-			*bool_output[0][Start] = value;
+			*bool_output[Start/8][Start%8] = value;
 		}
 		pthread_mutex_unlock(&bufferLock);
 	}
@@ -370,9 +370,9 @@ void Modbus::WriteMultipleCoils()
 		for(int j = 0; j < 8; j++)
 		{
 			int position = Start + i * 8 + j;
-			if (position < BUFFER_SIZE)
+			if (position < (BUFFER_SIZE*BUFFER_SIZE))
 			{
-				if (bool_output[0][position] != NULL) *bool_output[0][position] = bitRead(ByteArray[13 + i], j);
+				if (bool_output[position/8][position%8] != NULL) *bool_output[position/8][position%8] = bitRead(ByteArray[13 + i], j);
 			}
 			else //invalid address
 			{
