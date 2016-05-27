@@ -34,16 +34,28 @@
 
 #include "ladder.h"
 
-#define MAX_INPUT 		7
-#define MAX_OUTPUT 		5
+#define MAX_INPUT 		14
+#define MAX_OUTPUT 		11
+#define MAX_ANALOG_OUT		1
 
+/********************I/O PINS CONFIGURATION*********************
+ * A good source for RaspberryPi I/O pins information is:
+ * http://pinout.xyz
+ * 
+ * The buffers below works as an internal mask, so that the
+ * OpenPLC can access each pin sequentially
+****************************************************************/
 //inBufferPinMask: pin mask for each input, which
 //means what pin is mapped to that OpenPLC input
-int inBufferPinMask[MAX_INPUT] = { 7,  0,  2,  3, 12, 13, 14 };
+int inBufferPinMask[MAX_INPUT] = { 8, 9, 7, 0, 2, 3, 12, 13, 14, 21, 22, 23, 24, 25 };
 
 //outBufferPinMask: pin mask for each output, which
 //means what pin is mapped to that OpenPLC output
-int outBufferPinMask[MAX_OUTPUT] =	{ 4,  5,  6, 10, 11 };
+int outBufferPinMask[MAX_OUTPUT] =	{ 15, 16, 4, 5, 6, 10, 11, 26, 27, 28, 29 };
+
+//analogOutBufferPinMask: pin mask for the analog PWM
+//output of the RaspberryPi
+int analogOutBufferPinMask[MAX_ANALOG_OUT] = { 1 };
 
 //-----------------------------------------------------------------------------
 // This function is called by the main OpenPLC routine when it is initializing.
@@ -58,13 +70,22 @@ void initializeHardware()
 	for (int i = 0; i < MAX_INPUT; i++)
 	{
 		pinMode(inBufferPinMask[i], INPUT);
-		pullUpDnControl(inBufferPinMask[i], PUD_DOWN); //pull down enabled
+		if (i != 0 && i != 1) //pull down can't be enabled on the first two pins
+		{
+			pullUpDnControl(inBufferPinMask[i], PUD_DOWN); //pull down enabled
+		}
 	}
 
 	//set pins as output
 	for (int i = 0; i < MAX_OUTPUT; i++)
 	{
 		pinMode(outBufferPinMask[i], OUTPUT);
+	}
+	
+	//set PWM pins as output
+	for (int i = 0; i < MAX_ANALOG_OUT; i++)
+	{
+		pinMode(analogOutBufferPinMask[i], OUTPUT);
 	}
 }
 
@@ -80,27 +101,19 @@ void updateBuffers()
 	//INPUT
 	for (int i = 0; i < MAX_INPUT; i++)
 	{
-		if (bool_input[0][i] != NULL) *bool_input[0][i] = digitalRead(inBufferPinMask[i]);
-		/*
-		cout << "X1_" << i << ": ";
-		if (inBuffer[i])
-			cout << "1" << endl;
-		else
-			cout << "0" << endl;
-		*/
+		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = digitalRead(inBufferPinMask[i]);
 	}
 
 	//OUTPUT
 	for (int i = 0; i < MAX_OUTPUT; i++)
 	{
-		if (bool_output[0][i] != NULL) digitalWrite(outBufferPinMask[i], *bool_output[0][i]);
-		/*
-		cout << "Y1_" << i << ": ";
-		if (outBuffer[i])
-			cout << "1" << endl;
-		else
-			cout << "0" << endl;
-		*/
+		if (bool_output[i/8][i%8] != NULL) digitalWrite(outBufferPinMask[i], *bool_output[i/8][i%8]);
+	}
+	
+	//ANALOG OUT (PWM)
+	for (int i = 0; i < MAX_ANALOG_OUT; i++)
+	{
+		if (int_output[i/8][i%8] != NULL) pwmWrite(analogOutBufferPinMask[i], (*int_output[i/8][i%8] / 64));
 	}
 
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
