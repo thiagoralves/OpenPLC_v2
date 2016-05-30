@@ -116,7 +116,7 @@ int main(int argc,char **argv)
 	pthread_t persistentThread;
 	pthread_create(&persistentThread, NULL, persistentStorage, NULL);
 
-
+#ifdef __linux__
 	//======================================================
 	//              REAL-TIME INITIALIZATION
 	//======================================================
@@ -135,7 +135,7 @@ int main(int argc,char **argv)
 	{
 		printf("WARNING: Failed to lock memory\n");
 	}
-
+#endif
 	//gets the starting point for the clock
 	printf("Getting current time\n");
 	struct timespec timer_start;
