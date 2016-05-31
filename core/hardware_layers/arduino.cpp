@@ -99,7 +99,7 @@ int serialport_init(const char* serialport, int baud)
     if (tcgetattr(fd, &toptions) < 0)
     {
         perror("serialport_init: Couldn't get term attributes");
-        return -1;
+        //return -1;
     }
 
     speed_t brate = baud; // let you override switch below if needed
