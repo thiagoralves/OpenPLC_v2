@@ -24,7 +24,7 @@ rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
-OPTIONS="Blank Fischertechnik RaspberryPi Unipi Arduino Arduino+RaspberryPi Simulink "
+OPTIONS="Blank Fischertechnik RaspberryPi UniPi Arduino Arduino+RaspberryPi Simulink "
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
