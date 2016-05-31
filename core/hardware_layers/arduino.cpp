@@ -390,6 +390,24 @@ void normalizePath(char *portName)
 }
 
 //-----------------------------------------------------------------------------
+// getSerialPorts_w32() gives us a partial name. We must get the full path
+//-----------------------------------------------------------------------------
+void normalizePath_w32(char *portName)
+{
+	char linkPath[1000];
+	char finalPath[1000];
+	strcpy(linkPath, "/dev/");
+	strcat(linkPath, portName);
+
+	//Remove the last character from linkPath (it's a space char)
+	int i;
+	for (i = 0; linkPath[i] != '\0'; i++);
+	linkPath[i-1] = '\0';
+	
+	strcpy(portName, linkPath);
+}
+
+//-----------------------------------------------------------------------------
 // Get the name of each port found
 //-----------------------------------------------------------------------------
 void getSerialPorts(char **portsList)
@@ -416,6 +434,35 @@ void getSerialPorts(char **portsList)
 }
 
 //-----------------------------------------------------------------------------
+// Get the name of each port found - modified version for W32 with Cygwin
+//-----------------------------------------------------------------------------
+void getSerialPorts_w32(char **portsList)
+{
+	FILE *fp;
+	char ports[1000];
+
+	fp = popen("/bin/ls /dev", "r");
+	if (fp == NULL)
+	{
+		printf("Failed to find serial ports\n" );
+	}
+
+	int i = 0;
+	while (fgets(ports, sizeof(ports)-1, fp) != NULL)
+	{
+		if (!strncmp(ports, "ttyS", 4))
+		{
+			printf("Port found: %s", ports);
+			normalizePath_w32(ports);
+			strncpy(portsList[i], ports, 1000);
+			i++;
+		}
+	}
+
+	pclose(fp);
+}
+
+//-----------------------------------------------------------------------------
 // Test if *portName is the correct serial port
 //-----------------------------------------------------------------------------
 bool testPort(char *portName)
@@ -427,12 +474,17 @@ bool testPort(char *portName)
 	for (int i = 0; i < 5; i++) //try at least 5 times
 	{
 		sendPacket();
-		sleep_ms(100);
-		if (receivePacket()) return 1;
-		
+		sleep_ms(400);
+		if (receivePacket())
+		{
+			close(serial_fd);
+			return 1;
+		}
 		sleep_ms(30);
 	}
 	
+	printf("The port didn't respond properly\n");
+	close(serial_fd);
 	return 0;
 }
 
@@ -469,6 +521,7 @@ void initializeHardware()
     	memset(portsList[i],0,sizeof(portsList[i]));
 	}
 
+#ifdef __linux__
 	if (verifySerialPortsAvailable())
 	{
 		getSerialPorts(portsList);
@@ -482,6 +535,19 @@ void initializeHardware()
 			pthread_create(&thread, NULL, exchangeData, NULL);
 		}
 	}
+#else
+	getSerialPorts_w32(portsList);
+	int portId = findCorrectPort(portsList);
+	
+	if (portId != -1)
+	{
+		serial_fd = serialport_init(portsList[portId], 115200);
+		sleep_ms(100);
+		pthread_t thread;
+		pthread_create(&thread, NULL, exchangeData, NULL);
+	}
+#endif
+
 }
 
 //-----------------------------------------------------------------------------
