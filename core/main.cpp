@@ -112,9 +112,9 @@ int main(int argc,char **argv)
 	//======================================================
 	//          PERSISTENT STORAGE INITIALIZATION
 	//======================================================
-	readPersistentStorage();
-	pthread_t persistentThread;
-	pthread_create(&persistentThread, NULL, persistentStorage, NULL);
+	//readPersistentStorage();
+	//pthread_t persistentThread;
+	//pthread_create(&persistentThread, NULL, persistentStorage, NULL);
 
 #ifdef __linux__
 	//======================================================
