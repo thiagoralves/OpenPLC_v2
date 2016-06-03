@@ -469,6 +469,7 @@ bool testPort(char *portName)
 {
 	printf("Trying to open %s\n", portName);
 	serial_fd = serialport_init(portName, 115200);
+	sleep_ms(500);
 	if (serial_fd < 0) return 0;
 	
 	for (int i = 0; i < 5; i++) //try at least 5 times
@@ -530,7 +531,7 @@ void initializeHardware()
 		if (portId != -1)
 		{
 			serial_fd = serialport_init(portsList[portId], 115200);
-			sleep_ms(100);
+			sleep_ms(500);
 			pthread_t thread;
 			pthread_create(&thread, NULL, exchangeData, NULL);
 		}
@@ -542,7 +543,7 @@ void initializeHardware()
 	if (portId != -1)
 	{
 		serial_fd = serialport_init(portsList[portId], 115200);
-		sleep_ms(100);
+		sleep_ms(500);
 		pthread_t thread;
 		pthread_create(&thread, NULL, exchangeData, NULL);
 	}
