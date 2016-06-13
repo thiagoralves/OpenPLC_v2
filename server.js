@@ -303,5 +303,7 @@ function compileOpenPLC()
 			plcRunning = true;
 			compilationSuccess = true;
 		}
+		
+		compilationEnded = true;
 	});
 }
