@@ -33,11 +33,17 @@
 #include <errno.h>
 #include <string.h>
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 #include "ladder.h"
 
 #define MB_TCP				1
 #define MB_RTU				2
 #define MAX_MB_IO			400
+
+using namespace std;
 
 uint8_t bool_input_buf[MAX_MB_IO];
 uint8_t bool_output_buf[MAX_MB_IO];
@@ -87,8 +93,205 @@ void sleep_ms(int milliseconds)
 	nanosleep(&ts, NULL);
 }
 
+//-----------------------------------------------------------------------------
+// Finds the data between the separators on the line provided
+//-----------------------------------------------------------------------------
+void getData(char *line, char *buf, char separator1, char separator2)
+{
+	int i=0, j=0;
+
+	while (line[i] != separator1 && line[i] != '\0')
+	{
+		i++;
+	}
+	i++;
+
+	while (line[i] != separator2 && line[i] != '\0')
+	{
+		buf[j] = line[i];
+		i++;
+		j++;
+		buf[j] = '\0';
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Get the number of the Modbus device
+//-----------------------------------------------------------------------------
+int getDeviceNumber(char *line)
+{
+	char temp[5];
+	int i = 0, j = 7;
+
+	while (line[j] != '.')
+	{
+		temp[i] = line[j];
+		i++;
+		j++;
+		temp[i] = '\0';
+	}
+
+	return(atoi(temp));
+}
+
+//-----------------------------------------------------------------------------
+// get the type of function or parameter for the Modbus device
+//-----------------------------------------------------------------------------
+void getFunction(char *line, char *parameter)
+{
+	int i = 0, j = 0;
+
+	while (line[j] != '.')
+	{
+		j++;
+	}
+	j++;
+
+	while (line[j] != ' ' && line[j] != '=' && line[j] != '(')
+	{
+		parameter[i] = line[j];
+		i++;
+		j++;
+		parameter[i] = '\0';
+	}
+}
+
 void parseConfig()
 {
+	string line;
+	char line_str[1024];
+	ifstream cfgfile("mbconfig.cfg");
+
+	if (cfgfile.is_open())
+	{
+		while (getline(cfgfile, line))
+		{
+			strncpy(line_str, line.c_str(), 1024);
+			if (line_str[0] != '#' && strlen(line_str) > 1)
+			{
+				if (!strncmp(line_str, "Num_Devices", 11))
+				{
+					char temp_buffer[5];
+					getData(line_str, temp_buffer, '"', '"');
+					num_devices = atoi(temp_buffer);
+					mb_devices = (struct MB_device *)malloc(num_devices*sizeof(struct MB_device));
+				}
+
+				else if (!strncmp(line_str, "device", 6))
+				{
+					int deviceNumber = getDeviceNumber(line_str);
+					char functionType[100];
+					getFunction(line_str, functionType);
+
+					if (!strncmp(functionType, "name", 4))
+					{
+						getData(line_str, mb_devices[deviceNumber].dev_name, '"', '"');
+					}
+					else if (!strncmp(functionType, "protocol", 8))
+					{
+						char temp_buffer[5];
+						getData(line_str, temp_buffer, '"', '"');
+
+						if (!strncmp(temp_buffer, "TCP", 3))
+							mb_devices[deviceNumber].protocol = MB_TCP;
+						else if (!strncmp(temp_buffer, "RTU", 3))
+							mb_devices[deviceNumber].protocol = MB_RTU;
+					}
+					else if (!strncmp(functionType, "slave_id", 8))
+					{
+						char temp_buffer[5];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].dev_id = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "address", 7))
+					{
+						getData(line_str, mb_devices[deviceNumber].dev_address, '"', '"');
+					}
+					else if (!strncmp(functionType, "IP_Port", 7))
+					{
+						char temp_buffer[6];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].ip_port = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "RTU_Baud_Rate", 13))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].rtu_baud = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "RTU_Parity", 10))
+					{
+						char temp_buffer[3];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].rtu_parity = temp_buffer[0];
+					}
+					else if (!strncmp(functionType, "RTU_Data_Bits", 13))
+					{
+						char temp_buffer[6];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].rtu_data_bit = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "RTU_Stop_Bits", 13))
+					{
+						char temp_buffer[6];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].rtu_stop_bit = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Discrete_Inputs_Start", 21))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].discrete_inputs.start_address = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Discrete_Inputs_Size", 20))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].discrete_inputs.num_regs = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Coils_Start", 11))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].coils.start_address = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Coils_Size", 10))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].coils.num_regs = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Input_Registers_Start", 21))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].input_registers.start_address = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Input_Registers_Size", 20))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].input_registers.num_regs = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Holding_Registers_Start", 23))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].holding_registers.start_address = atoi(temp_buffer);
+					}
+					else if (!strncmp(functionType, "Holding_Registers_Size", 22))
+					{
+						char temp_buffer[10];
+						getData(line_str, temp_buffer, '"', '"');
+						mb_devices[deviceNumber].holding_registers.num_regs = atoi(temp_buffer);
+					}
+				}
+			}
+		}
+	}
+
+
+	/*
 	num_devices = 2;
 	mb_devices = (struct MB_device *)malloc(num_devices*sizeof(struct MB_device));
 
@@ -123,6 +326,7 @@ void parseConfig()
 	mb_devices[1].input_registers.num_regs = 0;
 	mb_devices[1].holding_registers.start_address = 0;
 	mb_devices[1].holding_registers.num_regs = 10;
+	*/
 }
 
 void *exchangeData(void *arg)
