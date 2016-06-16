@@ -3,7 +3,14 @@ echo Building OpenPLC environment:
 
 echo [MATIEC COMPILER]
 
+echo [LIBMODBUS]
+cd libmodbus_src
+./autogen.sh
+./configure
+make install
+
 echo [LADDER]
+cd ..
 cp ./matiec_src/bin_win32/iec2c.exe ./
 cp ./matiec_src/bin_win32/*.dll ./
 ./iec2c.exe ./st_files/blank_program.st
@@ -20,10 +27,17 @@ rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
-OPTIONS="Blank Fischertechnik RaspberryPi Unipi Arduino Arduino+RaspberryPi Simulink "
+OPTIONS="Blank Modbus Fischertechnik RaspberryPi Unipi Arduino Arduino+RaspberryPi Simulink "
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_win.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
+		exit
+	elif [ "$opt" = "Modbus" ]; then
+		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
 		cp ./core_builders/build_win.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..

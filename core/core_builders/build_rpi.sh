@@ -6,5 +6,5 @@ g++ -I ./lib -c Res0.c
 echo Generating glueVars.cpp
 ./glue_generator
 echo Compiling main program
-g++ -I ./lib -lrt -lwiringPi -lpthread *.cpp *.o -o openplc
+g++ *.cpp *.o -o openplc -I ./lib -lrt -lwiringPi -lpthread -I /usr/local/include/modbus -L /usr/local/lib -lmodbus
 cd ..
