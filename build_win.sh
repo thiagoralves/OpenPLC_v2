@@ -25,6 +25,8 @@ cp ./glue_generator_src/glue_generator.exe ./core/glue_generator.exe
 cd core
 rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
+echo
+echo
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
 OPTIONS="Blank Modbus Fischertechnik RaspberryPi Unipi Arduino Arduino+RaspberryPi Simulink "

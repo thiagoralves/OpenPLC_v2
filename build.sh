@@ -12,7 +12,7 @@ cd ..
 cd libmodbus_src
 ./autogen.sh
 ./configure
-make install
+sudo make install
 
 echo [LADDER]
 cd ..
@@ -29,6 +29,8 @@ cp ./glue_generator_src/glue_generator ./core/glue_generator
 cd core
 rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
+echo
+echo
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
 OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi Arduino Arduino+RaspberryPi Simulink "
