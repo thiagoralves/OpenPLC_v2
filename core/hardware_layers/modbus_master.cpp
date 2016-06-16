@@ -99,6 +99,7 @@ void sleep_ms(int milliseconds)
 void getData(char *line, char *buf, char separator1, char separator2)
 {
 	int i=0, j=0;
+	buf[j] = '\0';
 
 	while (line[i] != separator1 && line[i] != '\0')
 	{
@@ -121,7 +122,7 @@ void getData(char *line, char *buf, char separator1, char separator2)
 int getDeviceNumber(char *line)
 {
 	char temp[5];
-	int i = 0, j = 7;
+	int i = 0, j = 6;
 
 	while (line[j] != '.')
 	{
@@ -290,42 +291,29 @@ void parseConfig()
 		}
 	}
 
-
+	//Parser Debug
 	/*
-	num_devices = 2;
-	mb_devices = (struct MB_device *)malloc(num_devices*sizeof(struct MB_device));
-
-	strcpy(mb_devices[0].dev_name, "MB_dev01");
-	mb_devices[0].protocol = MB_TCP;
-	strcpy(mb_devices[0].dev_address, "192.168.23.1");
-	mb_devices[0].ip_port = 502;
-	mb_devices[0].dev_id = 1;
-	mb_devices[0].isConnected = false;
-
-	mb_devices[0].discrete_inputs.start_address = 0;
-	mb_devices[0].discrete_inputs.num_regs = 8;
-	mb_devices[0].coils.start_address = 0;
-	mb_devices[0].coils.num_regs = 0;
-	mb_devices[0].input_registers.start_address = 0;
-	mb_devices[0].input_registers.num_regs = 10;
-	mb_devices[0].holding_registers.start_address = 0;
-	mb_devices[0].holding_registers.num_regs = 0;
-
-	strcpy(mb_devices[1].dev_name, "MB_dev02");
-	mb_devices[1].protocol = MB_TCP;
-	strcpy(mb_devices[1].dev_address, "192.168.23.1");
-	mb_devices[1].ip_port = 503;
-	mb_devices[1].dev_id = 1;
-	mb_devices[1].isConnected = false;
-
-	mb_devices[1].discrete_inputs.start_address = 0;
-	mb_devices[1].discrete_inputs.num_regs = 0;
-	mb_devices[1].coils.start_address = 0;
-	mb_devices[1].coils.num_regs = 8;
-	mb_devices[1].input_registers.start_address = 0;
-	mb_devices[1].input_registers.num_regs = 0;
-	mb_devices[1].holding_registers.start_address = 0;
-	mb_devices[1].holding_registers.num_regs = 10;
+	for (int i = 0; i < num_devices; i++)
+	{
+		printf("Device %d\n", i);
+		printf("Name: %s\n", mb_devices[i].dev_name);
+		printf("Protocol: %d\n", mb_devices[i].protocol);
+		printf("Address: %s\n", mb_devices[i].dev_address);
+		printf("IP Port: %d\n", mb_devices[i].ip_port);
+		printf("Baud rate: %d\n", mb_devices[i].rtu_baud);
+		printf("Parity: %c\n", mb_devices[i].rtu_parity);
+		printf("Data Bits: %d\n", mb_devices[i].rtu_data_bit);
+		printf("Stop Bits: %d\n", mb_devices[i].rtu_stop_bit);
+		printf("DI Start: %d\n", mb_devices[i].discrete_inputs.start_address);
+		printf("DI Size: %d\n", mb_devices[i].discrete_inputs.num_regs);
+		printf("Coils Start: %d\n", mb_devices[i].coils.start_address);
+		printf("Coils Size: %d\n", mb_devices[i].coils.num_regs);
+		printf("IR Start: %d\n", mb_devices[i].input_registers.start_address);
+		printf("IR Size: %d\n", mb_devices[i].input_registers.num_regs);
+		printf("HR Start: %d\n", mb_devices[i].holding_registers.start_address);
+		printf("HR Size: %d\n", mb_devices[i].holding_registers.num_regs);
+		printf("\n\n");
+	}
 	*/
 }
 
