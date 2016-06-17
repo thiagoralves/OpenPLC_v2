@@ -9,6 +9,8 @@ var plcRunning = true;
 var compilationOutput = '';
 var compilationEnded = false;
 var compilationSuccess = false;
+var uploadedFileName = '';
+var uploadedFilePath = '';
 
 app.use(multer({ dest: './st_files/',
     rename: function (fieldname, filename) 
@@ -21,14 +23,8 @@ app.use(multer({ dest: './st_files/',
 	},
 	onFileUploadComplete: function (file) 
 	{
-		console.log(file.fieldname + ' uploaded to  ' + file.path);
-		console.log('finishing old program...');
-		openplc.kill('SIGTERM');
-		plcRunning = false;
-		compilationOutput = '';
-		compilationEnded = false;
-		compilationSuccess = false;
-		compileProgram(file.originalname);
+		uploadedFileName = file.originalname;
+		uploadedFilePath = file.path;
 	}
 }));
 
@@ -95,6 +91,64 @@ app.post('/api/upload',function(req,res)
 		</html>';
 		
 		res.send(htmlString);
+		
+		console.log(uploadedFileName + ' uploaded to  ' + uploadedFilePath);
+		console.log('finishing old program...');
+		openplc.kill('SIGTERM');
+		plcRunning = false;
+		compilationOutput = '';
+		compilationEnded = false;
+		compilationSuccess = false;
+		compileProgram(uploadedFileName);
+    });
+});
+
+app.post('/api/changeModbusCfg',function(req,res)
+{
+    upload(req,res,function(err) 
+    {
+        if(err) 
+        {
+            return res.end("Error uploading file.");
+        }
+		
+        var htmlString = '\
+		<!DOCTYPE html>\
+		<html>\
+			<header>\
+				<meta http-equiv="refresh" content="5; url=/" />\
+				<meta name="viewport" content="width=device-width, user-scalable=no">\
+				<style>\
+					input[type=text] {border:0px; border-bottom:1px solid black; width:100%}\
+					button[type=button] \
+					{\
+						padding:10px; \
+						background-color:#4369DB; \
+						border-radius:10px; \
+						border-style:double; \
+						color:white;\
+						font-size:large;\
+						margin: 5 auto;\
+						width: 150px;\
+					} \
+				</style>\
+			</header>\
+			<body>\
+				<p align="center" style="font-family:verdana; font-size:60px; margin-top: 0px; margin-bottom: 10px">OpenPLC Server</p>\
+				<p align="center" style="font-family:verdana; font-size:25px; margin-top: 0px; margin-bottom: 10px"><br>Modbus configuration file uploaded</p>\
+			</body>\
+		</html>';
+		
+		res.send(htmlString);
+		
+		var mover = spawn('mv', ['-f', './st_files/' + uploadedFileName, './core/mbconfig.cfg']);
+		mover.on('close', function(code)
+		{
+			if (code != 0)
+			{
+				console.log('error moving modbus config file');
+			}
+		});
     });
 });
 
@@ -212,6 +266,19 @@ function showMainPage(req,res)
 					<br>\
 					<input type="file" name="file" id="file" class="inputfile" accept=".st">\
 					<input type="submit" value="Upload Program" name="submit">\
+				</form>\
+			</div> \
+			<br><br><br>\
+			<p align="center" style="font-family:verdana; font-size:25px; margin-top: 0px; margin-bottom: 10px">Change Modbus Master Configuration</p>\
+			<p align="center" style="font-family:verdana; font-size:14px; margin-top: 0px; margin-bottom: 10px">Changing this only have effect if OpenPLC is using the Modbus Master Driver</p>\
+			<div style="text-align:center">  \
+				<form id        =  "uploadMB"\
+					enctype   =  "multipart/form-data"\
+					action    =  "/api/changeModbusCfg"\
+					method    =  "post">\
+					<br>\
+					<input type="file" name="mbConfig" id="mbConfig" class="inputfile" accept=".cfg">\
+					<input type="submit" value="Upload Configuration" name="submit">\
 				</form>\
 			</div> \
 		</body>\
