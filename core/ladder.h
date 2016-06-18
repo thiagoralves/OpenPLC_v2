@@ -107,11 +107,7 @@ void sleep_thread(int milliseconds);
 void *modbusThread();
 
 //server.cpp
-int createSocket(int port);
-int waitForClient(int socket_fd);
-int listenToClient(int client_fd, unsigned char *buffer);
-void processMessage(unsigned char *buffer, int bufferSize);
-void *handleConnections(void *arguments);
+void updateModbusBuffers();
 void startServer(int port);
 
 //persistent_storage.cpp

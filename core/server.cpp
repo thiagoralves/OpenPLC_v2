@@ -28,142 +28,177 @@
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include <modbus.h>
 
 #include "ladder.h"
 
-#define MAX_INPUT 16
-#define MAX_OUTPUT 16
-#define MAX_MODBUS 100
+#define MAX_DISCRETE_INPUT 		100
+#define MAX_COILS 				100
+#define MAX_HOLD_REGS 			1000
+#define MAX_INP_REGS			1000
+
+pthread_mutex_t modbusLock; //mutex for the internal buffers
+
+modbus_mapping_t *mb_mapping;
+modbus_mapping_t *mb_old_mapping;
 
 //-----------------------------------------------------------------------------
-// Create the socket and bind it. Returns the file descriptor for the socket
-// created.
+// Must be called periodically. It updates the modbus buffers according to
+// the OpenPLC internal buffers
 //-----------------------------------------------------------------------------
-int createSocket(int port)
+void updateModbusBuffers()
 {
-	int socket_fd;
-	struct sockaddr_in server_addr;
-
-	//Create TCP Socket
-	socket_fd = socket(AF_INET,SOCK_STREAM,0);
-	if (socket_fd<0)
+	if (mb_mapping != NULL)
 	{
-		perror("Server: error creating stream socket");
-		exit(1);
-	}
+		pthread_mutex_lock(&modbusLock); //lock mutex
+		pthread_mutex_lock(&bufferLock);
 
-	//Initialize Server Struct
-	bzero((char *) &server_addr, sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(port);
-
-	//Bind socket
-	if (bind(socket_fd,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0)
-	{
-		perror("Server: error binding socket");
-		exit(1);
-	}
-
-	listen(socket_fd,5);
-	printf("Server: Listening on port %d\n", port);
-
-	return socket_fd;
-}
-
-//-----------------------------------------------------------------------------
-// Blocking call. Wait here for the client to connect. Returns the file
-// descriptor to communicate with the client.
-//-----------------------------------------------------------------------------
-int waitForClient(int socket_fd)
-{
-	int client_fd;
-	struct sockaddr_in client_addr;
-	unsigned int client_len;
-
-	printf("Server: waiting for new client...\n");
-
-	client_len = sizeof(client_addr);
-	client_fd = accept(socket_fd, (struct sockaddr *)&client_addr, &client_len); //blocking call
-
-	return client_fd;
-}
-
-//-----------------------------------------------------------------------------
-// Blocking call. Holds here until something is received from the client.
-// Once the message is received, it is stored on the buffer and the function
-// returns the number of bytes received.
-//-----------------------------------------------------------------------------
-int listenToClient(int client_fd, unsigned char *buffer)
-{
-	bzero(buffer, 256);
-	int n = read(client_fd, buffer, 255);
-	return n;
-}
-
-//-----------------------------------------------------------------------------
-// Process client's request
-//-----------------------------------------------------------------------------
-void processMessage(unsigned char *buffer, int bufferSize, int client_fd)
-{
-	unsigned char replyMessage[100];
-	int messageSize;
-
-	Modbus modbus(buffer, bufferSize);
-	messageSize = modbus.Run(replyMessage);
-	write(client_fd, replyMessage, messageSize);
-}
-
-//-----------------------------------------------------------------------------
-// Thread to handle requests for each connected client
-//-----------------------------------------------------------------------------
-void *handleConnections(void *arguments)
-{
-	int client_fd = *(int *)arguments;
-	printf("Server: Thread created for client ID: %d\n", client_fd);
-
-	while(1)
-	{
-		unsigned char buffer[256];
-		int messageSize;
-
-		messageSize = listenToClient(client_fd, buffer);
-		if (messageSize <= 0 || messageSize > 256)
+		for(int i = 0; i < MAX_DISCRETE_INPUT; i++)
 		{
-			break;
+			if (bool_input[i/8][i%8] != NULL) mb_mapping->tab_input_bits[i] = *bool_input[i/8][i%8];
 		}
 
-		processMessage(buffer, messageSize, client_fd);
+		for(int i = 0; i < MAX_COILS; i++)
+		{
+			if (bool_output[i/8][i%8] != NULL) mb_mapping->tab_bits[i] = *bool_output[i/8][i%8];
+		}
+
+		for (int i = 0; i < MAX_INP_REGS; i++)
+		{
+			if (int_input[0][i] != NULL) mb_mapping->tab_input_registers[i] = *int_input[0][i];
+		}
+
+		for (int i = 0; i < MAX_HOLD_REGS; i++)
+		{
+			if (int_output[0][i] != NULL) mb_mapping->tab_registers[i] = *int_output[0][i];
+		}
+
+		pthread_mutex_unlock(&bufferLock);
+		pthread_mutex_unlock(&modbusLock); //unlock mutex
+	}
+}
+
+//-----------------------------------------------------------------------------
+// This function sets the internal NULL OpenPLC buffers to point to valid
+// positions on the Modbus buffer
+//-----------------------------------------------------------------------------
+void mapUnusedIO()
+{
+	if (mb_mapping != NULL)
+	{
+		pthread_mutex_lock(&modbusLock); //lock mutex
+		pthread_mutex_lock(&bufferLock);
+
+		for(int i = 0; i < MAX_DISCRETE_INPUT; i++)
+		{
+			if (bool_input[i/8][i%8] == NULL) bool_input[i/8][i%8] = &mb_mapping->tab_input_bits[i];
+		}
+
+		for(int i = 0; i < MAX_COILS; i++)
+		{
+			if (bool_output[i/8][i%8] == NULL) bool_output[i/8][i%8] = &mb_mapping->tab_bits[i];
+		}
+
+		for (int i = 0; i < MAX_INP_REGS; i++)
+		{
+			if (int_input[0][i] == NULL) int_input[0][i] = (int16_t *)&mb_mapping->tab_input_registers[i];
+		}
+
+		for (int i = 0; i < MAX_HOLD_REGS; i++)
+		{
+			if (int_output[0][i] == NULL) int_output[0][i] = (int16_t *)&mb_mapping->tab_registers[i];
+		}
+
+		pthread_mutex_unlock(&bufferLock);
+		pthread_mutex_unlock(&modbusLock); //unlock mutex
 	}
 }
 
 //-----------------------------------------------------------------------------
 // Function to start the server. It receives the port number as argument and
-// creates an infinite loop to listen and parse the messages sent by the
-// clients
+// creates an infinite loop to listen respond to Modbus/TCP requests
 //-----------------------------------------------------------------------------
 void startServer(int port)
 {
-	int socket_fd, client_fd;
+	int socket_fd;
+	modbus_t *ctx;
+    int rc;
 
-	socket_fd = createSocket(port);
+    mb_mapping = modbus_mapping_new(MAX_COILS, MAX_INPUT, MAX_HOLD_REGS, MAX_INP_REGS); //arguments: coils, discrete inputs, holding registers, input registers
+    if (mb_mapping == NULL)
+    {
+        printf("Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+    }
+    mb_old_mapping = modbus_mapping_new(MAX_COILS, 0, MAX_HOLD_REGS, 0); //arguments: coils, discrete inputs, holding registers, input registers
+    if (mb_mapping == NULL)
+    {
+        printf("Failed to allocate the mapping: %s\n", modbus_strerror(errno));
+    }
+
+    printf("Waiting for Modbus/TCP connection on Port %i \n", port);
+	ctx = modbus_new_tcp(NULL, port);
+	socket_fd = modbus_tcp_listen(ctx, 1);
+	if (socket_fd == -1)
+	{
+		printf("Failed to create Modbus server: %s\n", modbus_strerror(errno));
+	}
+	if (modbus_tcp_accept(ctx, &socket_fd) == -1)
+	{
+		printf("Failed to create Modbus server: %s\n", modbus_strerror(errno));
+	}
+
+	//Map unused variables to the modbus buffer
+	mapUnusedIO();
 
 	while(1)
 	{
-		client_fd = waitForClient(socket_fd); //block until a client connects
-		if (client_fd < 0)
-		{
-			printf("Server: Error accepting client!\n");
-		}
+		uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
 
-		else
-		{
-			int arguments[1];
-			pthread_t thread;
+		rc = modbus_receive(ctx, query);
 
-			printf("Server: Client accepted! Creating thread for the new client ID: %d...\n", client_fd);
-			arguments[0] = client_fd;
-			pthread_create(&thread, NULL, handleConnections, arguments);
-		}
+        if (rc > 0)
+        {
+        	pthread_mutex_lock(&modbusLock); //lock mutex
+
+        	for (int i = 0; i < MAX_COILS; i++)
+        	{
+        		mb_old_mapping->tab_bits[i] = mb_mapping->tab_bits[i];
+        	}
+        	for (int i = 0; i < MAX_HOLD_REGS; i++)
+        	{
+        		mb_old_mapping->tab_registers[i] = mb_mapping->tab_registers[i];
+        	}
+
+        	modbus_reply(ctx, query, rc, mb_mapping);
+
+			pthread_mutex_lock(&bufferLock);
+        	for (int i = 0; i < MAX_COILS; i++)
+        	{
+        		if (mb_old_mapping->tab_bits[i] != mb_mapping->tab_bits[i])
+        		{
+        			if (bool_output[i/8][i%8] != NULL) *bool_output[i/8][i%8] = mb_mapping->tab_bits[i];
+        		}
+        	}
+        	for (int i = 0; i < MAX_HOLD_REGS; i++)
+        	{
+        		if (mb_old_mapping->tab_registers[i] != mb_mapping->tab_registers[i])
+        		{
+        			if (int_output[0][i] != NULL) *int_output[0][i] = mb_mapping->tab_registers[i];
+        		}
+        	}
+			pthread_mutex_unlock(&bufferLock);
+        	pthread_mutex_unlock(&modbusLock); //unlock mutex
+        }
+
+        else if (rc == -1)
+        {
+            /* Connection closed by the client or server */
+            printf("Modbus/TCP connection closed.\n");
+	    	modbus_close(ctx);
+            if (modbus_tcp_accept(ctx, &socket_fd) == -1)
+			{
+				printf("Failed to create Modbus server: %s\n", modbus_strerror(errno));
+			}
+        }
 	}
 }
