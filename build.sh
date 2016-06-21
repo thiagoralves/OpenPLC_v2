@@ -13,6 +13,7 @@ cd libmodbus_src
 ./autogen.sh
 ./configure
 sudo make install
+sudo ldconfig
 
 echo [LADDER]
 cd ..
