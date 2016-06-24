@@ -149,6 +149,14 @@ app.post('/api/changeModbusCfg',function(req,res)
 				console.log('error moving modbus config file');
 			}
 		});
+		var copier = spawn('cp', ['-f', './core/mbconfig.cfg', './']);
+		copier.on('close', function(code)
+		{
+			if (code != 0)
+			{
+				console.log('error copying modbus config file');
+			}
+		});
     });
 });
 
