@@ -84,28 +84,30 @@ double measureTime(struct timespec *timer_start)
 
 int main(int argc,char **argv)
 {
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
 	printf("OpenPLC Software running...\n");
 
 	//======================================================
 	//                 PLC INITIALIZATION
 	//======================================================
 	config_init__();
-    glueVars();
+	glueVars();
 
 	//======================================================
 	//               MUTEX INITIALIZATION
 	//======================================================
 	if (pthread_mutex_init(&bufferLock, NULL) != 0)
-    {
-        printf("Mutex init failed\n");
-        exit(1);
-    }
+	{
+		printf("Mutex init failed\n");
+		exit(1);
+	}
 
 	//======================================================
 	//              HARDWARE INITIALIZATION
 	//======================================================
-    initializeHardware();
-    updateBuffers();
+	initializeHardware();
+	updateBuffers();
 	pthread_t thread;
 	pthread_create(&thread, NULL, modbusThread, NULL);
 
