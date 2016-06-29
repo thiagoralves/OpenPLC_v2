@@ -19,14 +19,7 @@ openplc.stderr.on('data', function(data)
 });
 openplc.on('close', function(code)
 {
-	if (code != 0)
-	{
-		plcLog += 'OpenPLC application terminated with errors\r\n';
-	}
-	else
-	{
-		plcLog += 'OpenPLC application terminated\r\n';
-	}
+	plcLog += 'OpenPLC application terminated\r\n';
 });
 
 var plcRunning = true;
@@ -62,6 +55,7 @@ app.get('/run',function(req,res)
 	if (plcRunning == false)
 	{
 		console.log('Starting OpenPLC Software...');
+		plcLog = 'Starting OpenPLC Application...\r\n';
 		openplc = spawn('./core/openplc');
 		plcRunning = true;
 	}
@@ -440,6 +434,7 @@ function compileOpenPLC()
 			console.log('compiled without errors');
 			compilationOutput += 'compiled without errors\r\n';
 			console.log('Starting OpenPLC Software...');
+			plcLog = 'Starting OpenPLC Application...\r\n';
 			openplc = spawn('./core/openplc');
 			plcRunning = true;
 			compilationSuccess = true;
