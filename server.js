@@ -4,6 +4,30 @@ var app = express();
 var upload = multer({ dest: './st_files/'});
 var spawn = require('child_process').spawn;
 var openplc = spawn('./core/openplc');
+var plcLog = '';
+
+var openplc = spawn('./core/openplc');
+openplc.stdout.on('data', function(data)
+{
+	plcLog += data;
+	plcLog += '\r\n';
+});
+openplc.stderr.on('data', function(data)
+{
+	plcLog += data;
+	plcLog += '\r\n';
+});
+openplc.on('close', function(code)
+{
+	if (code != 0)
+	{
+		plcLog += 'OpenPLC application terminated with errors\r\n';
+	}
+	else
+	{
+		plcLog += 'OpenPLC application terminated\r\n';
+	}
+});
 
 var plcRunning = true;
 var compilationOutput = '';
@@ -165,6 +189,44 @@ app.listen(8080,function()
     console.log("Working on port 8080");
 });
 
+app.get('/viewLogs',function(req,res)
+{
+	var htmlString = '\
+	<!DOCTYPE html>\
+	<html>\
+		<header>\
+			<meta name="viewport" content="width=device-width, user-scalable=no">\
+			<style>\
+				input[type=text] {border:0px; border-bottom:1px solid black; width:100%}\
+				button[type=button] \
+				{\
+					padding:10px; \
+					background-color:#4369DB; \
+					border-radius:10px; \
+					border-style:double; \
+					color:white;\
+					font-size:large;\
+					margin: 5 auto;\
+					width: 150px;\
+				} \
+			</style>\
+		</header>\
+		\
+		<body>\
+			<p align="center" style="font-family:verdana; font-size:60px; margin-top: 0px; margin-bottom: 10px">OpenPLC Server</p>\
+			<div style="text-align:left; font-family:verdana; font-size:16px"> \
+				<p>';
+					htmlString += plcLog;
+					htmlString += '\
+				</p>\
+			</div>\
+		</body>\
+	</html>';
+	
+	htmlString = htmlString.replace(/(?:\r\n|\r|\n)/g, '<br />');
+	res.send(htmlString);
+});
+
 app.get('/uploadStatus',function(req,res)
 {
 	var htmlString = '\
@@ -237,7 +299,7 @@ function showMainPage(req,res)
 				button[type=button] \
 				{\
 					padding:10px; \
-					background-color:#4369DB; \
+					background-color:#555555; \
 					border-radius:10px; \
 					border-style:double; \
 					color:white;\
@@ -261,8 +323,12 @@ function showMainPage(req,res)
 			htmlString += '\
 			<br>\
 			<div style="text-align:center">  \
-				<button type="button" onclick="location.href=\'run\';">Run</button>\
-				<button type="button" style="background-color:crimson" onclick="location.href=\'stop\';">Stop</button>\
+				<button type="button" style="background-color:green" onclick="location.href=\'run\';">Run</button>\
+				<button type="button" style="background-color:FireBrick" onclick="location.href=\'stop\';">Stop</button>\
+			</div> \
+			<br>\
+			<div style="text-align:center">  \
+				<button type="button" style="width:300px" onclick="location.href=\'viewLogs\';">View PLC logs</button>\
 			</div> \
 			<br><br><br>\
 			<p align="center" style="font-family:verdana; font-size:25px; margin-top: 0px; margin-bottom: 10px">Change PLC Program</p>\
