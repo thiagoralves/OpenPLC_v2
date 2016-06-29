@@ -56,6 +56,20 @@ app.get('/run',function(req,res)
 		console.log('Starting OpenPLC Software...');
 		plcLog = 'Starting OpenPLC Application...\r\n';
 		openplc = spawn('./core/openplc');
+		openplc.stdout.on('data', function(data)
+		{
+			plcLog += data;
+			plcLog += '\r\n';
+		});
+		openplc.stderr.on('data', function(data)
+		{
+			plcLog += data;
+			plcLog += '\r\n';
+		});
+		openplc.on('close', function(code)
+		{
+			plcLog += 'OpenPLC application terminated\r\n';
+		});
 		plcRunning = true;
 	}
 	
@@ -188,6 +202,7 @@ app.get('/viewLogs',function(req,res)
 	<!DOCTYPE html>\
 	<html>\
 		<header>\
+			<meta http-equiv="refresh" content="3">\
 			<meta name="viewport" content="width=device-width, user-scalable=no">\
 			<style>\
 				input[type=text] {border:0px; border-bottom:1px solid black; width:100%}\
@@ -442,6 +457,21 @@ function compileOpenPLC()
 			console.log('Starting OpenPLC Software...');
 			plcLog = 'Starting OpenPLC Application...\r\n';
 			openplc = spawn('./core/openplc');
+			openplc.stdout.on('data', function(data)
+			{
+				plcLog += data;
+				plcLog += '\r\n';
+			});
+			openplc.stderr.on('data', function(data)
+			{
+				plcLog += data;
+				plcLog += '\r\n';
+			});
+			openplc.on('close', function(code)
+			{
+				plcLog += 'OpenPLC application terminated\r\n';
+			});
+			
 			plcRunning = true;
 			compilationSuccess = true;
 		}
