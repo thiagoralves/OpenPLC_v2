@@ -97,7 +97,7 @@ int waitForClient(int socket_fd)
 int listenToClient(int client_fd, unsigned char *buffer)
 {
 	bzero(buffer, 256);
-	int n = read(client_fd, buffer, 255);
+	int n = read(client_fd, buffer, 256);
 	return n;
 }
 
@@ -106,12 +106,8 @@ int listenToClient(int client_fd, unsigned char *buffer)
 //-----------------------------------------------------------------------------
 void processMessage(unsigned char *buffer, int bufferSize, int client_fd)
 {
-	unsigned char replyMessage[100];
-	int messageSize;
-
-	Modbus modbus(buffer, bufferSize);
-	messageSize = modbus.Run(replyMessage);
-	write(client_fd, replyMessage, messageSize);
+	int messageSize = processModbusMessage(buffer, bufferSize);
+	write(client_fd, buffer, messageSize);
 }
 
 //-----------------------------------------------------------------------------
@@ -147,6 +143,7 @@ void startServer(int port)
 	int socket_fd, client_fd;
 
 	socket_fd = createSocket(port);
+	mapUnusedIO();
 
 	while(1)
 	{
