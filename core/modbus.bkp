@@ -118,6 +118,8 @@ void mapUnusedIO()
 //-----------------------------------------------------------------------------
 void ModbusError(unsigned char *buffer, int mb_error)
 {
+	buffer[4] = 0;
+	buffer[5] = 3;
 	buffer[7] = buffer[7] | 0x80; //set the highest bit
 	buffer[8] = mb_error;
 	MessageLength = 9;
@@ -143,10 +145,17 @@ void ReadCoils(unsigned char *buffer, int bufferSize)
 	ByteDataLength = CoilDataLength / 8; //calculating the size of the message in bytes
 	if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;
 
+	//asked for too many coils
+	if (ByteDataLength > 255)
+	{
+		ModbusError(buffer, ERR_ILLEGAL_DATA_ADDRESS);
+		return;
+	}
+
 	//preparing response
-	CoilDataLength = ByteDataLength * 8;
-	buffer[5] = ByteDataLength + 3; //Number of bytes after this one.
-	buffer[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	buffer[4] = highByte(ByteDataLength + 3);
+	buffer[5] = lowByte(ByteDataLength + 3); //Number of bytes after this one
+	buffer[8] = ByteDataLength;     //Number of bytes of data
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < ByteDataLength ; i++)
@@ -203,10 +212,17 @@ void ReadDiscreteInputs(unsigned char *buffer, int bufferSize)
 	ByteDataLength = InputDataLength / 8;
 	if(ByteDataLength * 8 < InputDataLength) ByteDataLength++;
 
+	//asked for too many inputs
+	if (ByteDataLength > 255)
+	{
+		ModbusError(buffer, ERR_ILLEGAL_DATA_ADDRESS);
+		return;
+	}
+
 	//Preparing response
-	InputDataLength = ByteDataLength * 8;
-	buffer[5] = ByteDataLength + 3; //Number of bytes after this one.
-	buffer[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	buffer[4] = highByte(ByteDataLength + 3);
+	buffer[5] = lowByte(ByteDataLength + 3); //Number of bytes after this one
+	buffer[8] = ByteDataLength;     //Number of bytes of data
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < ByteDataLength ; i++)
@@ -262,9 +278,17 @@ void ReadHoldingRegisters(unsigned char *buffer, int bufferSize)
 	WordDataLength = word(buffer[10],buffer[11]);
 	ByteDataLength = WordDataLength * 2;
 
+	//asked for too many registers
+	if (ByteDataLength > 255)
+	{
+		ModbusError(buffer, ERR_ILLEGAL_DATA_ADDRESS);
+		return;
+	}
+
 	//preparing response
-	buffer[5] = ByteDataLength + 3; //Number of bytes after this one.
-	buffer[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	buffer[4] = highByte(ByteDataLength + 3);
+	buffer[5] = lowByte(ByteDataLength + 3); //Number of bytes after this one
+	buffer[8] = ByteDataLength;     //Number of bytes of data
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < WordDataLength; i++)
@@ -274,13 +298,13 @@ void ReadHoldingRegisters(unsigned char *buffer, int bufferSize)
 		{
 			if (int_output[0][position] != NULL)
 			{
-				ByteArray[ 9 + i * 2] = highByte(*int_output[0][position]);
-				ByteArray[10 + i * 2] = lowByte(*int_output[0][position]);
+				buffer[ 9 + i * 2] = highByte(*int_output[0][position]);
+				buffer[10 + i * 2] = lowByte(*int_output[0][position]);
 			}
 			else
 			{
-				ByteArray[ 9 + i * 2] = 0;
-				ByteArray[10 + i * 2] = 0;
+				buffer[ 9 + i * 2] = 0;
+				buffer[10 + i * 2] = 0;
 			}
 		}
 		else //invalid address
@@ -319,9 +343,17 @@ void ReadInputRegisters(unsigned char *buffer, int bufferSize)
 	WordDataLength = word(buffer[10],buffer[11]);
 	ByteDataLength = WordDataLength * 2;
 
+	//asked for too many registers
+	if (ByteDataLength > 255)
+	{
+		ModbusError(buffer, ERR_ILLEGAL_DATA_ADDRESS);
+		return;
+	}
+
 	//preparing response
-	buffer[5] = ByteDataLength + 3; //Number of bytes after this one.
-	buffer[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
+	buffer[4] = highByte(ByteDataLength + 3);
+	buffer[5] = lowByte(ByteDataLength + 3); //Number of bytes after this one
+	buffer[8] = ByteDataLength;     //Number of bytes of data
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < WordDataLength; i++)
@@ -331,13 +363,13 @@ void ReadInputRegisters(unsigned char *buffer, int bufferSize)
 		{
 			if (int_input[0][position] != NULL)
 			{
-				ByteArray[ 9 + i * 2] = highByte(*int_input[0][position]);
-				ByteArray[10 + i * 2] = lowByte(*int_input[0][position]);
+				buffer[ 9 + i * 2] = highByte(*int_input[0][position]);
+				buffer[10 + i * 2] = lowByte(*int_input[0][position]);
 			}
 			else
 			{
-				ByteArray[ 9 + i * 2] = 0;
-				ByteArray[10 + i * 2] = 0;
+				buffer[ 9 + i * 2] = 0;
+				buffer[10 + i * 2] = 0;
 			}
 		}
 		else //invalid address
@@ -405,7 +437,8 @@ void WriteCoil(unsigned char *buffer, int bufferSize)
 	}
 	else
 	{
-		buffer[5] = 2; //Number of bytes after this one.
+		buffer[4] = 0;
+		buffer[5] = 6; //Number of bytes after this one.
 		MessageLength = 12;
 	}
 }
@@ -444,6 +477,7 @@ void WriteRegister(unsigned char *buffer, int bufferSize)
 	}
 	else
 	{
+		buffer[4] = 0;
 		buffer[5] = 6; //Number of bytes after this one.
 		MessageLength = 12;
 	}
@@ -468,17 +502,17 @@ void WriteMultipleCoils(unsigned char *buffer, int bufferSize)
 	CoilDataLength = word(buffer[10],buffer[11]);
 	ByteDataLength = CoilDataLength / 8;
 	if(ByteDataLength * 8 < CoilDataLength) ByteDataLength++;
-	CoilDataLength = ByteDataLength * 8;
 
 	//this request must have all the bytes it wants to write. If it doesn't, it's a corrupted message
-	if (bufferSize < (13 + ByteDataLength))
+	if ( (bufferSize < (13 + ByteDataLength)) || (buffer[12] != ByteDataLength) )
 	{
 		ModbusError(buffer, ERR_ILLEGAL_DATA_VALUE);
 		return;
 	}
 
 	//preparing response
-	buffer[5] = ByteDataLength + 5; //Number of bytes after this one.
+	buffer[4] = 0;
+	buffer[5] = 6; //Number of bytes after this one.
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < ByteDataLength ; i++)
@@ -528,14 +562,15 @@ void WriteMultipleRegisters(unsigned char *buffer, int bufferSize)
 	ByteDataLength = WordDataLength * 2;
 
 	//this request must have all the bytes it wants to write. If it doesn't, it's a corrupted message
-	if (bufferSize < (13 + ByteDataLength))
+	if ( (bufferSize < (13 + ByteDataLength)) || (buffer[12] != ByteDataLength) )
 	{
 		ModbusError(buffer, ERR_ILLEGAL_DATA_VALUE);
 		return;
 	}
 
 	//preparing response
-	buffer[5] = ByteDataLength + 3; //Number of bytes after this one.
+	buffer[4] = 0;
+	buffer[5] = 6; //Number of bytes after this one.
 
 	pthread_mutex_lock(&bufferLock);
 	for(int i = 0; i < WordDataLength; i++)
@@ -570,8 +605,14 @@ int processModbusMessage(unsigned char *buffer, int bufferSize)
 {
 	MessageLength = 0;
 
+	//check if the message is long enough
+	if (bufferSize < 8)
+	{
+		ModbusError(buffer, ERR_ILLEGAL_FUNCTION);
+	}
+
 	//****************** Read Coils **********************
-	if(buffer[7] == MB_FC_READ_COILS)
+	else if(buffer[7] == MB_FC_READ_COILS)
 	{
 		ReadCoils(buffer, bufferSize);
 	}
