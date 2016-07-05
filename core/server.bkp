@@ -96,8 +96,8 @@ int waitForClient(int socket_fd)
 //-----------------------------------------------------------------------------
 int listenToClient(int client_fd, unsigned char *buffer)
 {
-	bzero(buffer, 256);
-	int n = read(client_fd, buffer, 256);
+	bzero(buffer, 1024);
+	int n = read(client_fd, buffer, 1024);
 	return n;
 }
 
@@ -120,11 +120,11 @@ void *handleConnections(void *arguments)
 
 	while(1)
 	{
-		unsigned char buffer[256];
+		unsigned char buffer[1024];
 		int messageSize;
 
 		messageSize = listenToClient(client_fd, buffer);
-		if (messageSize <= 0 || messageSize > 256)
+		if (messageSize <= 0 || messageSize > 1024)
 		{
 			break;
 		}
