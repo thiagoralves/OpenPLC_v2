@@ -476,10 +476,14 @@ bool testPort(char *portName)
 	{
 		sendPacket();
 		sleep_ms(400);
-		if (receivePacket())
+		for (int j = 0; j < 10; j++)
 		{
+		  if (receivePacket())
+		  {
 			close(serial_fd);
 			return 1;
+		  }
+		  sleep_ms(10);
 		}
 		sleep_ms(30);
 	}
