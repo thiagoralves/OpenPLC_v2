@@ -281,12 +281,12 @@ bool receivePacket()
 	int response = read(serial_fd, receiveBuffer, 100);
 	if (response == -1)
 	{
-		printf("Couldn't read from IO\n");
+		printf("Couldn't read from IO. Error: %s\n", strerror(errno));
 		return 0;
 	}
 	else if (response == 0)
 	{
-		printf("No response from IO\n");
+		printf("No response from IO. Error: %s\n", strerror(errno));
 		return 0;
 	}
 	else
@@ -469,7 +469,7 @@ bool testPort(char *portName)
 {
 	printf("Trying to open %s\n", portName);
 	serial_fd = serialport_init(portName, 115200);
-	sleep_ms(500);
+	sleep_ms(2500);
 	if (serial_fd < 0) return 0;
 	
 	for (int i = 0; i < 5; i++) //try at least 5 times
@@ -478,12 +478,12 @@ bool testPort(char *portName)
 		sleep_ms(400);
 		for (int j = 0; j < 10; j++)
 		{
-		  if (receivePacket())
-		  {
-			close(serial_fd);
-			return 1;
-		  }
-		  sleep_ms(10);
+			if (receivePacket())
+			{
+				close(serial_fd);
+				return 1;
+			}
+			sleep_ms(10);
 		}
 		sleep_ms(30);
 	}
@@ -535,7 +535,7 @@ void initializeHardware()
 		if (portId != -1)
 		{
 			serial_fd = serialport_init(portsList[portId], 115200);
-			sleep_ms(500);
+			sleep_ms(2500);
 			pthread_t thread;
 			pthread_create(&thread, NULL, exchangeData, NULL);
 		}
@@ -547,7 +547,7 @@ void initializeHardware()
 	if (portId != -1)
 	{
 		serial_fd = serialport_init(portsList[portId], 115200);
-		sleep_ms(500);
+		sleep_ms(2500);
 		pthread_t thread;
 		pthread_create(&thread, NULL, exchangeData, NULL);
 	}
