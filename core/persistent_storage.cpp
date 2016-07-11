@@ -38,7 +38,7 @@ void *persistentStorage(void *args)
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	for (int i = 0; i < BUFFER_SIZE; i++)
 	{
-		if (int_output[0][i] != NULL) persistentBuffer[i] = *int_output[0][i];
+		if (int_output[i] != NULL) persistentBuffer[i] = *int_output[i];
 	}
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 
@@ -50,11 +50,11 @@ void *persistentStorage(void *args)
 		pthread_mutex_lock(&bufferLock); //lock mutex
 		for (int i = 0; i < BUFFER_SIZE; i++)
 		{
-			if (int_output[0][i] != NULL)
+			if (int_output[i] != NULL)
 			{
-				if (persistentBuffer[i] != *int_output[0][i])
+				if (persistentBuffer[i] != *int_output[i])
 				{
-					persistentBuffer[i] = *int_output[0][i];
+					persistentBuffer[i] = *int_output[i];
 					bufferOutdated = true;
 				}
 			}
@@ -104,7 +104,7 @@ int readPersistentStorage()
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	for (int i = 0; i < BUFFER_SIZE; i++)
 	{
-		if (int_output[0][i] != NULL) *int_output[0][i] = persistentBuffer[i];
+		if (int_output[i] != NULL) *int_output[i] = persistentBuffer[i];
 	}
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
