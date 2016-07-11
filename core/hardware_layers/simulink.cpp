@@ -127,13 +127,13 @@ void *exchangeData(void *arg)
 			pthread_mutex_lock(&bufferLock); //lock mutex
 			for (int i = 0; i < ANALOG_BUF_SIZE; i++)
 			{
-				if (int_input[0][i] != NULL) *int_input[0][i] = plc_data->analogIn[i];
-				if (int_output[0][i] != NULL) plc_data->analogOut[i] = *int_output[0][i];
+				if (int_input[i] != NULL) *int_input[i] = plc_data->analogIn[i];
+				if (int_output[i] != NULL) plc_data->analogOut[i] = *int_output[i];
 			}
 			for (int i = 0; i < DIGITAL_BUF_SIZE; i++)
 			{
-				if (bool_input[0][i] != NULL) *bool_input[0][i] = plc_data->digitalIn[i];
-				if (bool_output[0][i] != NULL) plc_data->digitalOut[i] = *bool_output[0][i];
+				if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = plc_data->digitalIn[i];
+				if (bool_output[i/8][i%8] != NULL) plc_data->digitalOut[i] = *bool_output[i/8][i%8];
 			}
 			pthread_mutex_unlock(&bufferLock); //unlock mutex
 

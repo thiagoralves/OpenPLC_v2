@@ -194,11 +194,11 @@ void updateBuffers()
 	//printf("\nAnalog Inputs:");
 	for (int i = 0; i < 2; i++)
 	{
-		if (int_input[0][i] != NULL) *int_input[0][i] = mcp_adcRead(i); //printf("[AI%d]: %d | ", i, mcp_adcRead(i));
+		if (int_input[i] != NULL) *int_input[i] = mcp_adcRead(i); //printf("[AI%d]: %d | ", i, mcp_adcRead(i));
 	}
 	//printf("\n");
 
-	if(int_output[0][0] != NULL) pwmWrite(ANALOG_OUT_PIN, *int_output[0][0]);
+	if(int_output[0] != NULL) pwmWrite(ANALOG_OUT_PIN, *int_output[0]);
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
 

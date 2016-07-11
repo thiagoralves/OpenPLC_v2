@@ -41,7 +41,7 @@
 /********************I/O PINS CONFIGURATION*********************
  * A good source for RaspberryPi I/O pins information is:
  * http://pinout.xyz
- * 
+ *
  * The buffers below works as an internal mask, so that the
  * OpenPLC can access each pin sequentially
 ****************************************************************/
@@ -81,7 +81,7 @@ void initializeHardware()
 	{
 		pinMode(outBufferPinMask[i], OUTPUT);
 	}
-	
+
 	//set PWM pins as output
 	for (int i = 0; i < MAX_ANALOG_OUT; i++)
 	{
@@ -109,11 +109,11 @@ void updateBuffers()
 	{
 		if (bool_output[i/8][i%8] != NULL) digitalWrite(outBufferPinMask[i], *bool_output[i/8][i%8]);
 	}
-	
+
 	//ANALOG OUT (PWM)
 	for (int i = 0; i < MAX_ANALOG_OUT; i++)
 	{
-		if (int_output[i/8][i%8] != NULL) pwmWrite(analogOutBufferPinMask[i], (*int_output[i/8][i%8] / 64));
+		if (int_output[i] != NULL) pwmWrite(analogOutBufferPinMask[i], (*int_output[i] / 64));
 	}
 
 	pthread_mutex_unlock(&bufferLock); //unlock mutex

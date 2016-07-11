@@ -484,12 +484,12 @@ void updateBuffers()
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	pthread_mutex_lock(&ioLock);
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < MAX_MB_IO; i++)
 	{
 		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bool_input_buf[i];
-		if (int_input[0][i] != NULL) *int_input[0][i] = int_input_buf[i];
+		if (int_input[i] != NULL) *int_input[i] = int_input_buf[i];
 		if (bool_output[i/8][i%8] != NULL) bool_output_buf[i] = *bool_output[i/8][i%8];
-		if (int_output[i/8][i%8] != NULL) int_output_buf[i] = *int_output[i/8][i%8];
+		if (int_output[i] != NULL) int_output_buf[i] = *int_output[i];
 	}
 
 	pthread_mutex_unlock(&ioLock);

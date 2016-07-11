@@ -153,7 +153,7 @@ int main(int argc,char **argv)
 		pthread_mutex_unlock(&bufferLock); //unlock mutex
 
 		updateBuffers();
-		updateModbusBuffers();
+		//updateModbusBuffers();
 
 		updateTime();
 

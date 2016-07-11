@@ -2,17 +2,10 @@
 echo Building OpenPLC environment:
 
 echo [MATIEC COMPILER]
-
-echo [LIBMODBUS]
-cd libmodbus_src
-./autogen.sh
-./configure
-make install
-
-echo [LADDER]
-cd ..
 cp ./matiec_src/bin_win32/iec2c.exe ./
 cp ./matiec_src/bin_win32/*.dll ./
+
+echo [LADDER]
 ./iec2c.exe ./st_files/blank_program.st
 mv -f POUS.c POUS.h LOCATED_VARIABLES.h VARIABLES.csv Config0.c Config0.h Res0.c ./core/
 
@@ -33,14 +26,20 @@ OPTIONS="Blank Modbus Fischertechnik RaspberryPi Unipi Arduino Arduino+Raspberry
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_win.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
 		exit
 	elif [ "$opt" = "Modbus" ]; then
 		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_win.sh ../build_core.sh
+		cp ./core_builders/build_modbus.sh ../build_core.sh
+		echo [LIBMODBUS]
+		cd ..
+		cd libmodbus_src
+		./autogen.sh
+		./configure
+		make install
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
@@ -68,7 +67,7 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Arduino" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_win.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
@@ -82,7 +81,7 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Simulink" ]; then
 		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_win.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh

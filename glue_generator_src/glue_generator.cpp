@@ -45,37 +45,20 @@ TIME __CURRENT_TIME;\r\n\
 \r\n\
 //Internal buffers for I/O and memory. These buffers are defined in the\r\n\
 //auto-generated glueVars.cpp file\r\n\
-#define BUFFER_SIZE		100\r\n\
+#define BUFFER_SIZE		1024\r\n\
 \r\n\
 //Booleans\r\n\
-IEC_BOOL *bool_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_BOOL *bool_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
+IEC_BOOL *bool_input[BUFFER_SIZE][8];\r\n\
+IEC_BOOL *bool_output[BUFFER_SIZE][8];\r\n\
 \r\n\
-//Ints\r\n\
-IEC_SINT *sint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_SINT *sint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_INT *int_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_INT *int_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_DINT *dint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_DINT *dint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_LINT *lint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_LINT *lint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
+//Analog I/O\r\n\
+IEC_INT *int_input[BUFFER_SIZE];\r\n\
+IEC_INT *int_output[BUFFER_SIZE];\r\n\
 \r\n\
-//Unsigned Ints\r\n\
-IEC_USINT *usint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_USINT *usint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_UINT *uint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_UINT *uint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_UDINT *udint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_UDINT *udint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_ULINT *ulint_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_ULINT *ulint_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-\r\n\
-//Floats\r\n\
-IEC_REAL *float_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_REAL *float_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_LREAL *double_input[BUFFER_SIZE][BUFFER_SIZE];\r\n\
-IEC_LREAL *double_output[BUFFER_SIZE][BUFFER_SIZE];\r\n\
+//Memory\r\n\
+IEC_INT *int_memory[BUFFER_SIZE];\r\n\
+IEC_DINT *dint_memory[BUFFER_SIZE];\r\n\
+IEC_LINT *lint_memory[BUFFER_SIZE];\r\n\
 \r\n\
 \r\n\
 #define __LOCATED_VAR(type, name, ...) type __##name;\r\n\
@@ -146,13 +129,20 @@ void findPositions(char *varName, int *pos1, int *pos2)
 	int i=4, j=0;
 	char tempBuffer[100];
 
-	while (varName[i] != '_')
+	while (varName[i] != '_' && varName[i] != '\0')
 	{
 		tempBuffer[j] = varName[i];
 		i++; j++;
 		tempBuffer[j] = '\0';
 	}
 	*pos1 = atoi(tempBuffer);
+
+	if (varName[i] == '\0')
+	{
+		*pos2 = 0;
+		return;
+	}
+
 	j = 0; i++;
 
 	while (varName[i] != '\0')
@@ -171,6 +161,11 @@ void glueVar(char *varName, char *varType)
 
 	findPositions(varName, &pos1, &pos2);
 
+	if (pos2 >= 8)
+	{
+		cout << "***Invalid addressing on located variable" << varName << "***" << endl;
+	}
+
 	if (varName[2] == 'I')
 	{
 		//INPUT
@@ -180,7 +175,7 @@ void glueVar(char *varName, char *varType)
 				glueVars << "\tbool_input[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
 				break;
 			case 'W':
-				glueVars << "\tint_input[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
+				glueVars << "\tint_input[" << pos1 << "] = " << varName << ";\r\n";
 				break;
 		}
 	}
@@ -193,14 +188,25 @@ void glueVar(char *varName, char *varType)
 				glueVars << "\tbool_output[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
 				break;
 			case 'W':
-				glueVars << "\tint_output[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
+				glueVars << "\tint_output[" << pos1 << "] = " << varName << ";\r\n";
 				break;
 		}
 	}
 	else if (varName[2] == 'M')
 	{
 		//MEMORY
-		//pending...
+		switch (varName[3])
+		{
+			case 'W':
+				glueVars << "\tint_memory[" << pos1 << "] = " << varName << ";\r\n";
+				break;
+			case 'D':
+				glueVars << "\tdint_memory[" << pos1 << "] = (IEC_DINT *)" << varName << ";\r\n";
+				break;
+			case 'L':
+				glueVars << "\tlint_memory[" << pos1 << "] = (IEC_LINT *)" << varName << ";\r\n";
+				break;
+		}
 	}
 }
 

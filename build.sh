@@ -7,14 +7,6 @@ autoreconf -i
 ./configure
 make
 
-echo [LIBMODBUS]
-cd ..
-cd libmodbus_src
-./autogen.sh
-./configure
-sudo make install
-sudo ldconfig
-
 echo [LADDER]
 cd ..
 cp ./matiec_src/iec2c ./
@@ -38,14 +30,20 @@ OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi Arduino Arduino+Raspberry
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_linux.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
 		exit
 	elif [ "$opt" = "Modbus" ]; then
 		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_linux.sh ../build_core.sh
+		cp ./core_builders/build_modbus.sh ../build_core.sh
+		echo [LIBMODBUS]
+		cd ..
+		cd libmodbus_src
+		./autogen.sh
+		./configure
+		sudo make install
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
@@ -73,7 +71,7 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Arduino" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_linux.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
@@ -87,7 +85,7 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Simulink" ]; then
 		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_linux.sh ../build_core.sh
+		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh

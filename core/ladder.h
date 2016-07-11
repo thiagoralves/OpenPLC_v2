@@ -28,7 +28,7 @@
 
 //Internal buffers for I/O and memory. These buffers are defined in the
 //auto-generated glueVars.cpp file
-#define BUFFER_SIZE		100
+#define BUFFER_SIZE		1024
 /*********************/
 /*  IEC Types defs   */
 /*********************/
@@ -54,34 +54,17 @@ typedef float    IEC_REAL;
 typedef double   IEC_LREAL;
 
 //Booleans
-extern IEC_BOOL *bool_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_BOOL *bool_output[BUFFER_SIZE][BUFFER_SIZE];
+extern IEC_BOOL *bool_input[BUFFER_SIZE][8];
+extern IEC_BOOL *bool_output[BUFFER_SIZE][8];
 
-//Ints
-extern IEC_SINT *sint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_SINT *sint_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_INT *int_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_INT *int_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_DINT *dint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_DINT *dint_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_LINT *lint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_LINT *lint_output[BUFFER_SIZE][BUFFER_SIZE];
+//Analog I/O
+extern IEC_INT *int_input[BUFFER_SIZE];
+extern IEC_INT *int_output[BUFFER_SIZE];
 
-//Unsigned Ints
-extern IEC_USINT *usint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_USINT *usint_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_UINT *uint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_UINT *uint_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_UDINT *udint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_UDINT *udint_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_ULINT *ulint_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_ULINT *ulint_output[BUFFER_SIZE][BUFFER_SIZE];
-
-//Floats
-extern IEC_REAL *float_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_REAL *float_output[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_LREAL *double_input[BUFFER_SIZE][BUFFER_SIZE];
-extern IEC_LREAL *double_output[BUFFER_SIZE][BUFFER_SIZE];
+//Memory
+extern IEC_INT *int_memory[BUFFER_SIZE];
+extern IEC_DINT *dint_memory[BUFFER_SIZE];
+extern IEC_LINT *lint_memory[BUFFER_SIZE];
 
 //lock for the buffer
 extern pthread_mutex_t bufferLock;
@@ -107,63 +90,12 @@ void sleep_thread(int milliseconds);
 void *modbusThread();
 
 //server.cpp
-void updateModbusBuffers();
 void startServer(int port);
+
+//modbus.cpp
+int processModbusMessage(unsigned char *buffer, int bufferSize);
+void mapUnusedIO();
 
 //persistent_storage.cpp
 void *persistentStorage(void *args);
 int readPersistentStorage();
-
-//Declaration of the supported modbus functions and the respective function code
-enum MB_FC
-{
-	MB_FC_NONE						= 0,
-	MB_FC_READ_COILS				= 1,
-	MB_FC_READ_INPUTS				= 2,
-	MB_FC_READ_HOLDING_REGISTERS	= 3,
-	MB_FC_READ_INPUT_REGISTERS		= 4,
-	MB_FC_WRITE_COIL				= 5,
-	MB_FC_WRITE_REGISTER			= 6,
-	MB_FC_WRITE_MULTIPLE_COILS		= 15,
-	MB_FC_WRITE_MULTIPLE_REGISTERS	= 16,
-	MB_FC_ERROR						= 255
-};
-
-enum MB_ERROR
-{
-	ERR_NONE						= 0,
-	ERR_ILLEGAL_FUNCTION			= 1,
-	ERR_ILLEGAL_DATA_ADDRESS		= 2,
-	ERR_ILLEGAL_DATA_VALUE			= 3,
-	ERR_SLAVE_DEVICE_FAILURE		= 4,
-	ERR_SLAVE_DEVICE_BUSY			= 6
-};
-
-//Definition of the Modbus class
-class Modbus
-{
-	public:
-		Modbus(unsigned char *request, int size); //constructor
-		int Run(unsigned char *reply); //perform the modbus operations
-
-		//Controls for debug
-		int Runs, Reads, Writes;
-
-	private:
-		unsigned char ByteArray[260]; //message received / sent
-		int MessageLength; //size of the reply message
-		MB_FC FC; //Function code received / sent
-		MB_ERROR ER; //Modbus error
-		void SetFC(int fc); //method to identify the function code received
-		int word(unsigned char byte1, unsigned char byte2); //method to create a word from two bytes
-		void ReadCoils();
-		void ReadDiscreteInputs();
-		void ReadHoldingRegisters();
-		void ReadInputRegisters();
-		void WriteCoil();
-		void WriteRegister();
-		void WriteMultipleCoils();
-		void WriteMultipleRegisters();
-		void ModbusError();
-};
-
