@@ -79,7 +79,7 @@ int waitForClient(int socket_fd)
 {
 	int client_fd;
 	struct sockaddr_in client_addr;
-	unsigned int client_len;
+	socklen_t client_len;
 
 	printf("Server: waiting for new client...\n");
 
