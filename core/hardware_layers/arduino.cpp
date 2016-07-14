@@ -567,25 +567,25 @@ void updateBuffers()
 	pthread_mutex_lock(&ioLock);
 
 	//Digital Input
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < (sizeof(input_data.digital)*8); i++)
 	{
-		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bitRead(input_data.digital[0], i);
+		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bitRead(input_data.digital[i/8], i%8);
 	}
 
 	//Analog Input
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < (sizeof(input_data.analog)/2); i++)
 	{
 		if (int_input[i] != NULL) *int_input[i] = input_data.analog[i];
 	}
 
 	//Digital Output
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < (sizeof(output_data.digital)*8); i++)
 	{
-		if (bool_output[i/8][i%8] != NULL) bitWrite(output_data.digital[0], i, *bool_output[i/8][i%8]);
+		if (bool_output[i/8][i%8] != NULL) bitWrite(output_data.digital[i/8], i%8, *bool_output[i/8][i%8]);
 	}
 
 	//Analog Output
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < (sizeof(output_data.analog)/2); i++)
 	{
 		if (int_output[i] != NULL) output_data.analog[i] = *int_output[i];
 	}
