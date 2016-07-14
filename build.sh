@@ -26,7 +26,7 @@ echo
 echo
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
-OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi Arduino Arduino+RaspberryPi Simulink "
+OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi Arduino ESP8266 Arduino+RaspberryPi Simulink "
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
@@ -71,6 +71,13 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Arduino" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_normal.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
+		exit
+	elif [ "$opt" = "ESP8266" ]; then
+		cp ./hardware_layers/esp8266.cpp ./hardware_layer.cpp
 		cp ./core_builders/build_normal.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
