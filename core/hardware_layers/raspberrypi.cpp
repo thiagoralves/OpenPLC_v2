@@ -85,7 +85,7 @@ void initializeHardware()
 	//set PWM pins as output
 	for (int i = 0; i < MAX_ANALOG_OUT; i++)
 	{
-		pinMode(analogOutBufferPinMask[i], OUTPUT);
+		pinMode(analogOutBufferPinMask[i], PWM_OUTPUT);
 	}
 }
 
