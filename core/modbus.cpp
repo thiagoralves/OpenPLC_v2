@@ -118,7 +118,7 @@ void mapUnusedIO()
 			if (int_output[i] == NULL) int_output[i] = &mb_holding_regs[i];
 
 		if (i >= MIN_16B_RANGE && i <= MAX_16B_RANGE)
-			if (int_memory[i] == NULL) int_memory[i] = &mb_holding_regs[i];
+			if (int_memory[i - MIN_16B_RANGE] == NULL) int_memory[i] = &mb_holding_regs[i];
 	}
 
 	pthread_mutex_unlock(&bufferLock);
