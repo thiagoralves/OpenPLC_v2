@@ -58,8 +58,8 @@ extern IEC_BOOL *bool_input[BUFFER_SIZE][8];
 extern IEC_BOOL *bool_output[BUFFER_SIZE][8];
 
 //Analog I/O
-extern IEC_INT *int_input[BUFFER_SIZE];
-extern IEC_INT *int_output[BUFFER_SIZE];
+extern IEC_UINT *int_input[BUFFER_SIZE];
+extern IEC_UINT *int_output[BUFFER_SIZE];
 
 //Memory
 extern IEC_INT *int_memory[BUFFER_SIZE];
