@@ -337,6 +337,7 @@ void *exchangeData(void *arg)
 				}
 				else
 				{
+					printf("Connected to MB device %s\n", mb_devices[i].dev_name);
 					mb_devices[i].isConnected = true;
 				}
 			}
