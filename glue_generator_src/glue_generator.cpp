@@ -56,7 +56,7 @@ IEC_UINT *int_input[BUFFER_SIZE];\r\n\
 IEC_UINT *int_output[BUFFER_SIZE];\r\n\
 \r\n\
 //Memory\r\n\
-IEC_INT *int_memory[BUFFER_SIZE];\r\n\
+IEC_UINT *int_memory[BUFFER_SIZE];\r\n\
 IEC_DINT *dint_memory[BUFFER_SIZE];\r\n\
 IEC_LINT *lint_memory[BUFFER_SIZE];\r\n\
 \r\n\
