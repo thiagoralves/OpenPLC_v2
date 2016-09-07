@@ -331,6 +331,7 @@ void *exchangeData(void *arg)
 			//Verify if device is connected
 			if (!mb_devices[i].isConnected)
 			{
+				printf("Device %s is disconnected. Attempting to reconnect...\n", mb_devices[i].dev_name);
 				if (modbus_connect(mb_devices[i].mb_ctx) == -1)
 				{
 					printf("Connection failed on MB device %s: %s\n", mb_devices[i].dev_name, modbus_strerror(errno));
