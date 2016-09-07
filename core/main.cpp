@@ -148,13 +148,15 @@ int main(int argc,char **argv)
 	//======================================================
 	for(;;)
 	{
+		//make sure the buffer pointers are correct and
+		//attached to the user variables
+		glueVars();
+		
 		pthread_mutex_lock(&bufferLock); //lock mutex
 		config_run__(tick++);
 		pthread_mutex_unlock(&bufferLock); //unlock mutex
 
 		updateBuffers();
-		//updateModbusBuffers();
-
 		updateTime();
 
 		sleep_until(&timer_start, OPLC_CYCLE);
