@@ -71,8 +71,8 @@
 
 IEC_BOOL mb_discrete_input[MAX_DISCRETE_INPUT];
 IEC_BOOL mb_coils[MAX_COILS];
-IEC_INT mb_input_regs[MAX_INP_REGS];
-IEC_INT mb_holding_regs[MAX_HOLD_REGS];
+IEC_UINT mb_input_regs[MAX_INP_REGS];
+IEC_UINT mb_holding_regs[MAX_HOLD_REGS];
 
 int MessageLength;
 
