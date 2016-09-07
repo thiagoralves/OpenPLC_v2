@@ -62,7 +62,7 @@ extern IEC_UINT *int_input[BUFFER_SIZE];
 extern IEC_UINT *int_output[BUFFER_SIZE];
 
 //Memory
-extern IEC_INT *int_memory[BUFFER_SIZE];
+extern IEC_UINT *int_memory[BUFFER_SIZE];
 extern IEC_DINT *dint_memory[BUFFER_SIZE];
 extern IEC_LINT *lint_memory[BUFFER_SIZE];
 
