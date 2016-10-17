@@ -39,11 +39,12 @@
 #include <wiringPiSPI.h>
 #include <wiringSerial.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "ladder.h"
 
 #define MAX_DIG_IN 			8
-#define MAX_DIG_OUT 		8
+#define MAX_DIG_OUT 		10
 #define MAX_ANALOG_IN		4
 #define MAX_ANALOG_OUT		4
 
@@ -52,8 +53,19 @@
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-//STRUCTURES AND METHODS DECLARATIONS
+//-----------------------------------------------------------------------------
+// Helper function - Makes the running thread sleep for the ammount of time
+// in milliseconds
+//-----------------------------------------------------------------------------
+void sleep_ms(int milliseconds)
+{
+	struct timespec ts;
+	ts.tv_sec = milliseconds / 1000;
+	ts.tv_nsec = (milliseconds % 1000) * 1000000;
+	nanosleep(&ts, NULL);
+}
 
+//STRUCTURES AND METHODS DECLARATIONS FROM PIXTEND
 struct pixtOut {
 	uint8_t byDigOut;
 	uint8_t byRelayOut;
@@ -75,7 +87,6 @@ struct pixtOutDAC {
 	uint16_t wAOut0;
 	uint16_t wAOut1;
 };
-
 
 struct pixtIn {
 	uint8_t byDigIn;
@@ -137,8 +148,9 @@ int Change_Serial_Mode(uint8_t mode);
 int Spi_Set_Gpio(int value);
 int Spi_Get_Gpio();
 
-//LIBRARY METHODS
+//IMPLEMENTATION OF PIXTEND LIBRARY
 static uint8_t byAux0;
+static uint8_t byInitFlag = 0;
 
 uint16_t crc16_calc(uint16_t crc, uint8_t data)
 {
@@ -626,8 +638,11 @@ int Spi_Setup(int spi_device)
 {
 	int pin_Spi_enable = 5;
 	int Spi_frequence = 100000;
-
+	if(byInitFlag < 1)
+	{
 	wiringPiSetup();
+	byInitFlag = 1;
+	}
 
 	pinMode(pin_Spi_enable, OUTPUT);
 	digitalWrite(pin_Spi_enable,1);
@@ -758,6 +773,36 @@ int Spi_Get_Gpio()
 	return spi_output[3];
 }
 
+pthread_mutex_t localBufferLock; //mutex for the internal ADC buffer
+struct pixtIn InputData;
+struct pixtOut OutputData;
+struct pixtOutDAC OutputDataDAC;
+
+void *updateLocalBuffers(void *args)
+{
+	struct pixtIn InputData_thread;
+	struct pixtOut OutputData_thread;
+	struct pixtOutDAC OutputDataDAC_thread;
+
+	while(1)
+	{
+		pthread_mutex_lock(&localBufferLock);
+		memcpy(&OutputData_thread, &OutputData, sizeof(pixtOut));
+		memcpy(&OutputDataDAC_thread, &OutputDataDAC, sizeof(pixtOutDAC));
+		pthread_mutex_unlock(&localBufferLock);
+
+		//Exchange PiXtend Data
+		OutputData_thread.byUcCtrl = 16;
+		Spi_AutoMode(&OutputData_thread, &InputData_thread);
+		Spi_AutoModeDAC(&OutputDataDAC_thread);
+
+		pthread_mutex_lock(&localBufferLock);
+		memcpy(&InputData, &InputData_thread, sizeof(pixtIn));
+		pthread_mutex_unlock(&localBufferLock);
+
+		sleep_ms(10);
+	}
+}
 
 //-----------------------------------------------------------------------------
 // This function is called by the main OpenPLC routine when it is initializing.
@@ -766,7 +811,10 @@ int Spi_Get_Gpio()
 void initializeHardware()
 {
 	Spi_Setup(0);
-	//wiringPiSPISetup(1, 100000); //initializing SPI for Analog OUT
+	Spi_Setup(1);
+
+	pthread_t piXtend_thread;
+	pthread_create(&piXtend_thread, NULL, updateLocalBuffers, NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -776,64 +824,55 @@ void initializeHardware()
 //-----------------------------------------------------------------------------
 void updateBuffers()
 {
-	unsigned char dig_in = 0;
-	unsigned char dig_out = 0;
-	unsigned char relay_out = 0;
-	uint16_t an_in[MAX_ANALOG_IN];
-	uint16_t an_out[2] = {0, 0};
-	uint16_t pwm_out[2] = {0, 0};
+	//lock mutexes
+	pthread_mutex_lock(&bufferLock);
+	pthread_mutex_lock(&localBufferLock);
 
-	dig_in = Spi_Get_Din();
-	for (int i = 0; i < MAX_ANALOG_IN; i++)
-	{
-		an_in[i] = Spi_Get_Ain(i);
-	}
-
-	pthread_mutex_lock(&bufferLock); //lock mutex
 	//DIGITAL INPUT
 	for (int i = 0; i < MAX_DIG_IN; i++)
 	{
-		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bitRead(dig_in, i);
+		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bitRead(InputData.byDigIn, i);
 	}
 
 	//DIGITAL OUTPUT
 	for (int i = 0; i < MAX_DIG_OUT; i++)
 	{
-		if (i < 4)
+		if (i < 6)
 		{
-			if (bool_output[i/8][i%8] != NULL) bitWrite(dig_out, i, *bool_output[i/8][i%8]);
+			if (bool_output[i/8][i%8] != NULL) bitWrite(OutputData.byDigOut, i, *bool_output[i/8][i%8]);
 		}
 		else
 		{
-			if (bool_output[i/8][i%8] != NULL) bitWrite(relay_out, i-4, *bool_output[i/8][i%8]);
+			if (bool_output[i/8][i%8] != NULL) bitWrite(OutputData.byRelayOut, i-6, *bool_output[i/8][i%8]);
 		}
 	}
 
 	//ANALOG IN
+	uint16_t *analogInputs;
+	analogInputs = &InputData.wAi0;
 	for (int i = 0; i < MAX_ANALOG_IN; i++)
 	{
-		if (int_input[i] != NULL) *int_input[i] = an_in[i];
+		if (int_input[i] != NULL) *int_input[i] = analogInputs[i];
 	}
 
 	//ANALOG OUT
+	uint16_t *analogOutputs;
+	uint16_t *pwmOutputs;
+	analogOutputs = &OutputDataDAC.wAOut0;
+	pwmOutputs = &OutputData.wPwm0;
 	for (int i = 0; i < MAX_ANALOG_OUT; i++)
 	{
 		if (i < 2)
 		{
-			if (int_output[i] != NULL) an_out[i] = (*int_output[i] / 64);
+			if (int_output[i] != NULL) analogOutputs[i] = (*int_output[i] / 64);
 		}
 		else
 		{
-			if (int_output[i] != NULL) pwm_out[i-2] = *int_output[i];
+			if (int_output[i] != NULL) pwmOutputs[i-2] = *int_output[i];
 		}
 	}
-	pthread_mutex_unlock(&bufferLock); //unlock mutex
 
-	Spi_Set_Dout(dig_out);
-	Spi_Set_Relays(relay_out);
-	for (int i = 0; i < 2; i++)
-	{
-		//Spi_Set_Aout(i, an_out[i]);
-		Spi_Set_Pwm(i, pwm_out[i]);
-	}
+	//unlock mutexes
+	pthread_mutex_unlock(&localBufferLock);
+	pthread_mutex_unlock(&bufferLock);
 }
