@@ -33,7 +33,7 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "Modbus" ]; then
 		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_modbus.sh ../build_core.sh
+		cp ./core_builders/build_modbus_win.sh ../build_core.sh
 		echo [LIBMODBUS]
 		cd ..
 		cd libmodbus_src
