@@ -44,6 +44,7 @@ select opt in $OPTIONS; do
 		./autogen.sh
 		./configure
 		sudo make install
+		sudo ldconfig
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
