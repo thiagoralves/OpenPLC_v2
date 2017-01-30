@@ -131,6 +131,8 @@ void *handleConnections(void *arguments)
 
 		processMessage(buffer, messageSize, client_fd);
 	}
+	
+	printf("Server: Closing thread for client ID: %d\n", client_fd);
 }
 
 //-----------------------------------------------------------------------------
