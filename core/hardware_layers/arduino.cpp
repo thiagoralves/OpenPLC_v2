@@ -62,6 +62,7 @@ struct OPLC_input input_data;
 struct OPLC_output output_data;
 
 int serial_fd;
+int isPortFound = 0;
 
 pthread_mutex_t ioLock;
 
@@ -279,14 +280,15 @@ bool receivePacket()
 {
 	uint8_t receiveBuffer[100];
 	int response = read(serial_fd, receiveBuffer, 100);
-	if (response == -1)
+	if (response == -1 && isPortFound)
 	{
 		printf("Couldn't read from IO. Error: %s\n", strerror(errno));
 		return 0;
 	}
 	else if (response == 0)
 	{
-		printf("No response from IO. Error: %s\n", strerror(errno));
+		//avoid printing error messages just if the serial returned 0
+		//printf("No response from IO. Error: %s\n", strerror(errno));
 		return 0;
 	}
 	else
@@ -534,6 +536,7 @@ void initializeHardware()
 
 		if (portId != -1)
 		{
+			isPortFound = 1;
 			serial_fd = serialport_init(portsList[portId], 115200);
 			sleep_ms(2500);
 			pthread_t thread;
