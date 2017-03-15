@@ -34,7 +34,7 @@
 
 #define OPLC_CYCLE			50000000
 
-extern int common_ticktime__;
+//extern int common_ticktime__;
 IEC_BOOL __DEBUG;
 
 static int tick = 0;
@@ -159,6 +159,6 @@ int main(int argc,char **argv)
 		updateBuffers();
 		updateTime();
 
-		sleep_until(&timer_start, OPLC_CYCLE);
+		sleep_until(&timer_start, common_ticktime__);
 	}
 }

@@ -69,6 +69,9 @@ extern IEC_LINT *lint_memory[BUFFER_SIZE];
 //lock for the buffer
 extern pthread_mutex_t bufferLock;
 
+//Common task timer
+extern unsigned long long common_ticktime__;
+
 //----------------------------------------------------------------------
 //FUNCTION PROTOTYPES
 //----------------------------------------------------------------------

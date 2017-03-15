@@ -42,6 +42,7 @@ void generateHeader()
 #include \"iec_std_lib.h\"\r\n\
 \r\n\
 TIME __CURRENT_TIME;\r\n\
+extern unsigned long long common_ticktime__;\r\n\
 \r\n\
 //Internal buffers for I/O and memory. These buffers are defined in the\r\n\
 //auto-generated glueVars.cpp file\r\n\
@@ -216,7 +217,7 @@ void generateBottom()
 \r\n\
 void updateTime()\r\n\
 {\r\n\
-	__CURRENT_TIME.tv_nsec += 50000000;\r\n\
+	__CURRENT_TIME.tv_nsec += common_ticktime__;\r\n\
 \r\n\
 	if (__CURRENT_TIME.tv_nsec >= 1000000000)\r\n\
 	{\r\n\
