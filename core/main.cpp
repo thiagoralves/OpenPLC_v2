@@ -38,7 +38,7 @@
 #include <unistd.h>
 
 
-#define OPLC_CYCLE			50000000
+#define OPLC_CYCLE          50000000
 
 extern int opterr;
 //extern int common_ticktime__;
@@ -57,26 +57,26 @@ pthread_mutex_t bufferLock; //mutex for the internal buffers
 //-----------------------------------------------------------------------------
 void sleep_thread(int milliseconds)
 {
-	struct timespec ts;
-	ts.tv_sec = milliseconds / 1000;
-	ts.tv_nsec = (milliseconds % 1000) * 1000000;
-	nanosleep(&ts, NULL);
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
 }
 
 void sleep_until(struct timespec *ts, int delay)
 {
-	ts->tv_nsec += delay;
-	if(ts->tv_nsec >= 1000*1000*1000)
-	{
-		ts->tv_nsec -= 1000*1000*1000;
-		ts->tv_sec++;
-	}
-	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, ts,  NULL);
+    ts->tv_nsec += delay;
+    if(ts->tv_nsec >= 1000*1000*1000)
+    {
+        ts->tv_nsec -= 1000*1000*1000;
+        ts->tv_sec++;
+    }
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, ts,  NULL);
 }
 
 void *modbusThread(void *arg)
 {
-	startServer(modbus_port);
+    startServer(modbus_port);
 }
 
 void *dnp3Thread(void *arg)
@@ -86,15 +86,15 @@ void *dnp3Thread(void *arg)
 
 double measureTime(struct timespec *timer_start)
 {
-	struct timespec timer_end;
-	double time_used;
+    struct timespec timer_end;
+    double time_used;
 
-	clock_gettime(CLOCK_MONOTONIC, &timer_end);
+    clock_gettime(CLOCK_MONOTONIC, &timer_end);
 
-	time_used = (timer_end.tv_sec - timer_start->tv_sec);
-	time_used += (timer_end.tv_nsec - timer_start->tv_nsec) / 1000000000.0;
+    time_used = (timer_end.tv_sec - timer_start->tv_sec);
+    time_used += (timer_end.tv_nsec - timer_start->tv_nsec) / 1000000000.0;
 
-	return time_used;
+    return time_used;
 }
 
 void print_usage() {
@@ -114,9 +114,9 @@ int main(int argc,char **argv)
     int opt;
     opterr = 0;
 
-	//======================================================
-	//                 READ COMMAND LINE ARGS
-	//======================================================
+    //======================================================
+    //                 READ COMMAND LINE ARGS
+    //======================================================
 
     while ((opt = getopt (argc, argv, "m:d:")) != -1) {
       switch (opt) {
@@ -141,88 +141,88 @@ int main(int argc,char **argv)
       }
     }
 
-	setvbuf(stdout, NULL, _IONBF, 0);
-	setvbuf(stderr, NULL, _IONBF, 0);
-	printf("OpenPLC Software running...\n");
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    printf("OpenPLC Software running...\n");
 
-	//======================================================
-	//                 PLC INITIALIZATION
-	//======================================================
-	config_init__();
-	glueVars();
+    //======================================================
+    //                 PLC INITIALIZATION
+    //======================================================
+    config_init__();
+    glueVars();
 
-	//======================================================
-	//               MUTEX INITIALIZATION
-	//======================================================
-	if (pthread_mutex_init(&bufferLock, NULL) != 0)
-	{
-		printf("Mutex init failed\n");
-		exit(1);
-	}
+    //======================================================
+    //               MUTEX INITIALIZATION
+    //======================================================
+    if (pthread_mutex_init(&bufferLock, NULL) != 0)
+    {
+        printf("Mutex init failed\n");
+        exit(1);
+    }
 
-	//======================================================
-	//              HARDWARE INITIALIZATION
-	//======================================================
-	initializeHardware();
-	updateBuffers();
-	pthread_t modbus_thread;
+    //======================================================
+    //              HARDWARE INITIALIZATION
+    //======================================================
+    initializeHardware();
+    updateBuffers();
+    pthread_t modbus_thread;
     pthread_t dnp3_thread;
 
     if(modbus_flag || (!modbus_flag && !dnp3_flag)) {
-	    pthread_create(&modbus_thread, NULL, modbusThread, NULL);
+        pthread_create(&modbus_thread, NULL, modbusThread, NULL);
     }
     if(dnp3_flag || (!modbus_flag && !dnp3_flag)) {
         pthread_create(&dnp3_thread, NULL, dnp3Thread, NULL);
     }
 
-	//======================================================
-	//          PERSISTENT STORAGE INITIALIZATION
-	//======================================================
-	//readPersistentStorage();
-	//pthread_t persistentThread;
-	//pthread_create(&persistentThread, NULL, persistentStorage, NULL);
+    //======================================================
+    //          PERSISTENT STORAGE INITIALIZATION
+    //======================================================
+    //readPersistentStorage();
+    //pthread_t persistentThread;
+    //pthread_create(&persistentThread, NULL, persistentStorage, NULL);
 
 #ifdef __linux__
-	//======================================================
-	//              REAL-TIME INITIALIZATION
-	//======================================================
-	// Set our thread to real time priority
-	struct sched_param sp;
-	sp.sched_priority = 30;
-	printf("Setting main thread priority to RT\n");
-	if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
-	{
-		printf("WARNING: Failed to set main thread to real-time priority\n");
-	}
+    //======================================================
+    //              REAL-TIME INITIALIZATION
+    //======================================================
+    // Set our thread to real time priority
+    struct sched_param sp;
+    sp.sched_priority = 30;
+    printf("Setting main thread priority to RT\n");
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
+    {
+        printf("WARNING: Failed to set main thread to real-time priority\n");
+    }
 
-	// Lock memory to ensure no swapping is done.
-	printf("Locking main thread memory\n");
-	if(mlockall(MCL_FUTURE|MCL_CURRENT))
-	{
-		printf("WARNING: Failed to lock memory\n");
-	}
+    // Lock memory to ensure no swapping is done.
+    printf("Locking main thread memory\n");
+    if(mlockall(MCL_FUTURE|MCL_CURRENT))
+    {
+        printf("WARNING: Failed to lock memory\n");
+    }
 #endif
-	//gets the starting point for the clock
-	printf("Getting current time\n");
-	struct timespec timer_start;
-	clock_gettime(CLOCK_MONOTONIC, &timer_start);
+    //gets the starting point for the clock
+    printf("Getting current time\n");
+    struct timespec timer_start;
+    clock_gettime(CLOCK_MONOTONIC, &timer_start);
 
-	//======================================================
-	//                    MAIN LOOP
-	//======================================================
-	for(;;)
-	{
-		//make sure the buffer pointers are correct and
-		//attached to the user variables
-		glueVars();
-		
-		pthread_mutex_lock(&bufferLock); //lock mutex
-		config_run__(tick++);
-		pthread_mutex_unlock(&bufferLock); //unlock mutex
+    //======================================================
+    //                    MAIN LOOP
+    //======================================================
+    for(;;)
+    {
+        //make sure the buffer pointers are correct and
+        //attached to the user variables
+        glueVars();
+        
+        pthread_mutex_lock(&bufferLock); //lock mutex
+        config_run__(tick++);
+        pthread_mutex_unlock(&bufferLock); //unlock mutex
 
-		updateBuffers();
-		updateTime();
+        updateBuffers();
+        updateTime();
 
-		sleep_until(&timer_start, common_ticktime__);
-	}
+        sleep_until(&timer_start, common_ticktime__);
+    }
 }
