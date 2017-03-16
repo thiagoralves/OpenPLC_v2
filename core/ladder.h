@@ -88,6 +88,7 @@ void updateBuffers();
 //main.cpp
 void sleep_thread(int milliseconds);
 void *modbusThread();
+void sleep_until(struct timespec *ts, int delay);
 
 //server.cpp
 void startServer(int port);
@@ -95,6 +96,9 @@ void startServer(int port);
 //modbus.cpp
 int processModbusMessage(unsigned char *buffer, int bufferSize);
 void mapUnusedIO();
+
+//dnp3.cpp
+void dnp3StartServer(int port);
 
 //persistent_storage.cpp
 void *persistentStorage(void *args);

@@ -32,12 +32,22 @@
 #include "iec_types.h"
 #include "ladder.h"
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+
 #define OPLC_CYCLE			50000000
 
+extern int opterr;
 extern int common_ticktime__;
 IEC_BOOL __DEBUG;
 
 static int tick = 0;
+
+int modbus_port = 502;
+int dnp3_port = 20000;
 
 pthread_mutex_t bufferLock; //mutex for the internal buffers
 
@@ -53,7 +63,7 @@ void sleep_thread(int milliseconds)
 	nanosleep(&ts, NULL);
 }
 
-static void sleep_until(struct timespec *ts, int delay)
+void sleep_until(struct timespec *ts, int delay)
 {
 	ts->tv_nsec += delay;
 	if(ts->tv_nsec >= 1000*1000*1000)
@@ -66,7 +76,12 @@ static void sleep_until(struct timespec *ts, int delay)
 
 void *modbusThread(void *arg)
 {
-	startServer(502);
+	startServer(modbus_port);
+}
+
+void *dnp3Thread(void *arg)
+{
+    dnp3StartServer(dnp3_port);
 }
 
 double measureTime(struct timespec *timer_start)
@@ -82,8 +97,46 @@ double measureTime(struct timespec *timer_start)
 	return time_used;
 }
 
+void print_usage() {
+    printf("Usage: ./openplc -m modbus_port -d dnp3_port\n");
+    printf("./openplc will run with modbus on port 502 and ");
+    printf("dnp3 on port 20000\n");
+    printf("Selecting only modbus or only dnp3 will only run that ");
+    printf("protocol\n");
+}
+
 int main(int argc,char **argv)
 {
+
+    bool modbus_flag = false;
+    bool dnp3_flag = false;
+  
+    int opt;
+    opterr = 0;
+
+    while ((opt = getopt (argc, argv, "m:d:")) != -1) {
+      switch (opt) {
+        case 'm':
+            modbus_flag = true;
+            modbus_port = atoi(optarg); 
+            break;
+        case 'd':
+            dnp3_flag = true;
+            dnp3_port = atoi(optarg);
+            break;
+        case '?':
+            if (isprint (optopt))
+                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+            else
+                fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
+            print_usage();
+            exit(1);
+            break;
+        default:
+            abort();
+      }
+    }
+
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 	printf("OpenPLC Software running...\n");
@@ -108,8 +161,15 @@ int main(int argc,char **argv)
 	//======================================================
 	initializeHardware();
 	updateBuffers();
-	pthread_t thread;
-	pthread_create(&thread, NULL, modbusThread, NULL);
+	pthread_t modbus_thread;
+    pthread_t dnp3_thread;
+
+    if(modbus_flag || (!modbus_flag && !dnp3_flag)) {
+	    pthread_create(&modbus_thread, NULL, modbusThread, NULL);
+    }
+    if(dnp3_flag || (!modbus_flag && !dnp3_flag)) {
+        pthread_create(&dnp3_thread, NULL, dnp3Thread, NULL);
+    }
 
 	//======================================================
 	//          PERSISTENT STORAGE INITIALIZATION
