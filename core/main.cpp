@@ -114,6 +114,10 @@ int main(int argc,char **argv)
     int opt;
     opterr = 0;
 
+	//======================================================
+	//                 READ COMMAND LINE ARGS
+	//======================================================
+
     while ((opt = getopt (argc, argv, "m:d:")) != -1) {
       switch (opt) {
         case 'm':
@@ -219,6 +223,6 @@ int main(int argc,char **argv)
 		updateBuffers();
 		updateTime();
 
-		sleep_until(&timer_start, OPLC_CYCLE);
+		sleep_until(&timer_start, common_ticktime__);
 	}
 }

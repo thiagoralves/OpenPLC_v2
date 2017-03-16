@@ -30,10 +30,11 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "Modbus" ]; then
 		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_modbus.sh ../build_core.sh
+		cp ./core_builders/build_modbus_win.sh ../build_core.sh
 		echo [LIBMODBUS]
 		cd ..
 		cd libmodbus_src
@@ -43,6 +44,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "Fischertechnik" ]; then
 		cp ./hardware_layers/fischertechnik.cpp ./hardware_layer.cpp
@@ -50,6 +52,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "RaspberryPi" ]; then
 		cp ./hardware_layers/raspberrypi.cpp ./hardware_layer.cpp
@@ -57,6 +60,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "UniPi" ]; then
 		cp ./hardware_layers/unipi.cpp ./hardware_layer.cpp
@@ -64,6 +68,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "PiXtend" ]; then
 		cp ./hardware_layers/pixtend.cpp ./hardware_layer.cpp
@@ -71,6 +76,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "Arduino" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
@@ -78,6 +84,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "ESP8266" ]; then
 		cp ./hardware_layers/esp8266.cpp ./hardware_layer.cpp
@@ -85,6 +92,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "Arduino+RaspberryPi" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
@@ -92,6 +100,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	elif [ "$opt" = "Simulink" ]; then
 		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
@@ -99,6 +108,7 @@ select opt in $OPTIONS; do
 		echo [OPENPLC]
 		cd ..
 		./build_core.sh
+		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
 		exit
 	else
 		#clear

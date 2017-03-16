@@ -42,6 +42,7 @@
 int createSocket(int port)
 {
 	int socket_fd;
+	int reuse = 1;
 	struct sockaddr_in server_addr;
 
 	//Create TCP Socket
@@ -51,6 +52,20 @@ int createSocket(int port)
 		perror("Server: error creating stream socket");
 		exit(1);
 	}
+
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
+    {
+        perror("Server: setsockopt(SO_REUSEADDR) failed");
+        exit(1);
+    }
+
+#ifdef SO_REUSEPORT
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&reuse, sizeof(reuse)) < 0)
+    {
+        perror("Server: setsockopt(SO_REUSEPORT) failed");
+        exit(1);
+    }
+#endif
 
 	//Initialize Server Struct
 	bzero((char *) &server_addr, sizeof(server_addr));
@@ -131,6 +146,8 @@ void *handleConnections(void *arguments)
 
 		processMessage(buffer, messageSize, client_fd);
 	}
+	
+	printf("Server: Closing thread for client ID: %d\n", client_fd);
 }
 
 //-----------------------------------------------------------------------------
