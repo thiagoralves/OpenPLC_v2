@@ -41,7 +41,7 @@
 #define OPLC_CYCLE			50000000
 
 extern int opterr;
-extern int common_ticktime__;
+//extern int common_ticktime__;
 IEC_BOOL __DEBUG;
 
 static int tick = 0;
