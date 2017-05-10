@@ -42,7 +42,6 @@
 int createSocket(int port)
 {
 	int socket_fd;
-	int reuse = 1;
 	struct sockaddr_in server_addr;
 
 	//Create TCP Socket
@@ -52,20 +51,6 @@ int createSocket(int port)
 		perror("Server: error creating stream socket");
 		exit(1);
 	}
-
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse, sizeof(reuse)) < 0)
-    {
-        perror("Server: setsockopt(SO_REUSEADDR) failed");
-        exit(1);
-    }
-
-#ifdef SO_REUSEPORT
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&reuse, sizeof(reuse)) < 0)
-    {
-        perror("Server: setsockopt(SO_REUSEPORT) failed");
-        exit(1);
-    }
-#endif
 
 	//Initialize Server Struct
 	bzero((char *) &server_addr, sizeof(server_addr));
@@ -79,7 +64,7 @@ int createSocket(int port)
 		perror("Server: error binding socket");
 		exit(1);
 	}
-
+        // we accept max 5 pending connections
 	listen(socket_fd,5);
 	printf("Server: Listening on port %d\n", port);
 
@@ -131,23 +116,36 @@ void processMessage(unsigned char *buffer, int bufferSize, int client_fd)
 void *handleConnections(void *arguments)
 {
 	int client_fd = *(int *)arguments;
+	unsigned char buffer[1024];
+	int messageSize;
+
 	printf("Server: Thread created for client ID: %d\n", client_fd);
 
 	while(1)
 	{
-		unsigned char buffer[1024];
-		int messageSize;
+		//unsigned char buffer[1024];
+		//int messageSize;
 
 		messageSize = listenToClient(client_fd, buffer);
 		if (messageSize <= 0 || messageSize > 1024)
 		{
+			// something has  gone wrong or the client has closed connection
+			if (messageSize == 0)
+			{
+				printf("Server: client ID: %d has closed the connection\n", client_fd);
+			}
+			else
+			{
+				printf("Server: Something is wrong with the  client ID: %d message Size : %i\n", client_fd, messageSize);
+			}
 			break;
 		}
 
 		processMessage(buffer, messageSize, client_fd);
 	}
-	
-	printf("Server: Closing thread for client ID: %d\n", client_fd);
+	//printf("Debug: Closing client socket and calling pthread_exit in server.cpp\n");
+	close(client_fd);
+	pthread_exit(NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -174,10 +172,15 @@ void startServer(int port)
 		{
 			int arguments[1];
 			pthread_t thread;
+                        int ret = -1;
 
 			printf("Server: Client accepted! Creating thread for the new client ID: %d...\n", client_fd);
 			arguments[0] = client_fd;
-			pthread_create(&thread, NULL, handleConnections, arguments);
+			ret = pthread_create(&thread, NULL, handleConnections, arguments);
+			if (ret==0) 
+			{
+				pthread_detach(thread);
+			}
 		}
 	}
 }
