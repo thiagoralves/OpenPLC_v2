@@ -354,7 +354,9 @@ void *exchangeData(void *arg)
 															mb_devices[i].discrete_inputs.num_regs, tempBuff);
 					if (return_val == -1)
 					{
+						printf("Modbus Read Discrete Input Registers failed on MB device %s: %s\n", mb_devices[i].dev_name, modbus_strerror(errno));
 						modbus_close(mb_devices[i].mb_ctx);
+						bool_input_index += (mb_devices[i].discrete_inputs.num_regs);
 						mb_devices[i].isConnected = false;
 					}
 					else
@@ -391,6 +393,8 @@ void *exchangeData(void *arg)
 						modbus_close(mb_devices[i].mb_ctx);
 						mb_devices[i].isConnected = false;
 					}
+					
+					free(tempBuff);
 				}
 
 				//Read input registers
@@ -402,7 +406,9 @@ void *exchangeData(void *arg)
 																	mb_devices[i].input_registers.num_regs, tempBuff);
 					if (return_val == -1)
 					{
+						printf("Modbus Read Discrete Input Registers failed on MB device %s: %s\n", mb_devices[i].dev_name, modbus_strerror(errno));
 						modbus_close(mb_devices[i].mb_ctx);
+						bool_input_index += (mb_devices[i].discrete_inputs.num_regs);
 						mb_devices[i].isConnected = false;
 					}
 					else
@@ -440,6 +446,8 @@ void *exchangeData(void *arg)
 						modbus_close(mb_devices[i].mb_ctx);
 						mb_devices[i].isConnected = false;
 					}
+					
+					free(tempBuff);
 				}
 			}
 		}
