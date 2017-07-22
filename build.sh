@@ -46,7 +46,7 @@ if [ "$DNP3_SUPPORT" = "Y" -o "$DNP3_SUPPORT" = "y" -o "$DNP3_SUPPORT" = "yes" ]
 
 	#build opendnp3
 	cmake ../dnp3
-	make -j
+	make
 	sudo make install
 	sudo ldconfig
 
