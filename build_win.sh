@@ -20,7 +20,7 @@ rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
 
 clear
-echo Disabling DNP3 support (opendnp3 is not compatible with Cygwin)...
+echo Disabling DNP3 support \(opendnp3 is not compatible with Cygwin\)...
 mv ./core/dnp3.cpp ./core/dnp3.disabled 2> /dev/null
 mv ./core/dnp3_dummy.disabled ./core/dnp3_dummy.cpp 2> /dev/null
 cp -f ./core/core_builders/dnp3_disabled/*.* ./core/core_builders/
