@@ -18,8 +18,13 @@ cp ./glue_generator_src/glue_generator.exe ./core/glue_generator.exe
 cd core
 rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
-echo
-echo
+
+clear
+echo Disabling DNP3 support (opendnp3 is not compatible with Cygwin)...
+mv ./core/dnp3.cpp ./core/dnp3.disabled 2> /dev/null
+mv ./core/dnp3_dummy.disabled ./core/dnp3_dummy.cpp 2> /dev/null
+cp -f ./core/core_builders/dnp3_disabled/*.* ./core/core_builders/
+
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
 OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend Arduino ESP8266 Arduino+RaspberryPi Simulink "
