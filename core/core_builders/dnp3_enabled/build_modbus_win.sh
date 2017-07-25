@@ -1,10 +1,10 @@
 #!/bin/bash
 cd core
 echo Generating object files...
-g++ -I ./lib -c Config0.c
-g++ -I ./lib -c Res0.c
+g++ -std=gnu++11 -I ./lib -c Config0.c -lasiodnp3 -lasiopal -lopendnp3 -lopenpal -Wno-narrowing
+g++ -std=gnu++11 -I ./lib -c Res0.c -lasiodnp3 -lasiopal -lopendnp3 -lopenpal -Wno-narrowing
 echo Generating glueVars.cpp
 ./glue_generator
 echo Compiling main program
-g++ *.cpp *.o -o openplc -I ./lib -pthread -fpermissive -I /usr/local/include/modbus -L /usr/local/lib -lmodbus
+g++ -std=gnu++11 *.cpp *.o -o openplc -I ./lib -pthread -fpermissive -I /usr/local/include/modbus -L /usr/local/lib -lmodbus -lasiodnp3 -lasiopal -lopendnp3 -lopenpal -Wno-narrowing
 cd ..
