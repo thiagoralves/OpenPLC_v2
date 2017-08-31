@@ -152,11 +152,14 @@ int main(int argc,char **argv)
 		//attached to the user variables
 		glueVars();
 		
+		updateBuffersIn(); //read input image
+
 		pthread_mutex_lock(&bufferLock); //lock mutex
-		config_run__(tick++);
+		config_run__(tick++); // execute plc program logic
 		pthread_mutex_unlock(&bufferLock); //unlock mutex
 
-		updateBuffers();
+		updateBuffersOut(); //write output image
+		
 		updateTime();
 
 		sleep_until(&timer_start, common_ticktime__);

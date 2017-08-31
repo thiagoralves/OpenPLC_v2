@@ -119,3 +119,44 @@ void updateBuffers()
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
 
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual state of the input pins. The mutex buffer_lock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersIn()
+{
+	pthread_mutex_lock(&bufferLock); //lock mutex
+
+	//INPUT
+	for (int i = 0; i < MAX_INPUT; i++)
+	{
+		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = digitalRead(inBufferPinMask[i]);
+	}
+
+	pthread_mutex_unlock(&bufferLock); //unlock mutex
+}
+
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual state of the output pins. The mutex buffer_lock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	pthread_mutex_lock(&bufferLock); //lock mutex
+
+	//OUTPUT
+	for (int i = 0; i < MAX_OUTPUT; i++)
+	{
+		if (bool_output[i/8][i%8] != NULL) digitalWrite(outBufferPinMask[i], *bool_output[i/8][i%8]);
+	}
+
+	//ANALOG OUT (PWM)
+	for (int i = 0; i < MAX_ANALOG_OUT; i++)
+	{
+		if (int_output[i] != NULL) pwmWrite(analogOutBufferPinMask[i], (*int_output[i] / 64));
+	}
+
+	pthread_mutex_unlock(&bufferLock); //unlock mutex
+}
