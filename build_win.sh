@@ -9,6 +9,12 @@ echo [LADDER]
 ./iec2c.exe ./st_files/blank_program.st
 mv -f POUS.c POUS.h LOCATED_VARIABLES.h VARIABLES.csv Config0.c Config0.h Res0.c ./core/
 
+echo [ST OPTIMIZER]
+cd st_optimizer_src
+g++ st_optimizer.cpp -o st_optimizer
+cd ..
+cp ./st_optimizer_src/st_optimizer.exe ./
+
 echo [GLUE GENERATOR]
 cd glue_generator_src
 g++ glue_generator.cpp -o glue_generator
