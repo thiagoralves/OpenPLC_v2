@@ -131,7 +131,7 @@ app.post('/api/upload',function(req,res)
 		compilationOutput = '';
 		compilationEnded = false;
 		compilationSuccess = false;
-		compileProgram(uploadedFileName);
+		optimizeCode(uploadedFileName);
     });
 });
 
@@ -368,6 +368,41 @@ function showMainPage(req,res)
 	</html>';
 	
 	res.send(htmlString);
+}
+
+function optimizeCode(fileName)
+{
+	console.log('optimizing ST code...');
+	compilationOutput += 'optimizing ST code...\r\n';
+	var optimizer = spawn('./st_optimizer', ['./st_files/' + fileName, './st_files/' + fileName]);
+	
+	optimizer.stdout.on('data', function(data)
+	{
+		console.log('' + data);
+		compilationOutput += data;
+		compilationOutput += '\r\n';
+	});
+	optimizer.stderr.on('data', function(data)
+	{
+		console.log('' + data);
+		compilationOutput += data;
+		compilationOutput += '\r\n';
+	});
+	optimizer.on('close', function(code)
+	{
+		if (code != 0)
+		{
+			console.log('Error optimizing program. Please check console log');
+			compilationOutput += 'Error optimizing program. Please check console log\r\n';
+			compilationEnded = true;
+		}
+		else
+		{
+			console.log('Program optimized successfully');
+			compilationOutput += 'Program optimized successfully\r\n';
+			compileProgram(fileName);
+		}
+	});
 }
 
 function compileProgram(fileName)
