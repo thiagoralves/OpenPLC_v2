@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 cd core
 echo Generating object files...
 g++ -I ./lib -c Config0.c

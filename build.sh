@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 echo Building OpenPLC environment:
 
 echo [MATIEC COMPILER]
@@ -25,10 +28,12 @@ g++ glue_generator.cpp -o glue_generator
 cd ..
 cp ./glue_generator_src/glue_generator ./core/glue_generator
 
-clear
-echo OpenPLC can talk Modbus/TCP and DNP3 SCADA protocols. Modbus/TCP is already
-echo added to the system. Do you want to add support for DNP3 as well \(Y/N\)?
-read DNP3_SUPPORT
+if [ -z "$DNP3_SUPPORT" ]; then
+	clear
+	echo OpenPLC can talk Modbus/TCP and DNP3 SCADA protocols. Modbus/TCP is already
+	echo added to the system. Do you want to add support for DNP3 as well \(Y/N\)?
+	read DNP3_SUPPORT
+fi
 if [ "$DNP3_SUPPORT" = "Y" -o "$DNP3_SUPPORT" = "y" -o "$DNP3_SUPPORT" = "yes" ]; then
 	echo Installing DNP3 on the system...
 
@@ -69,96 +74,82 @@ fi
 cd core
 rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
-echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
-echo Please select the driver you would like to use:
-OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend PiXtend_2S Arduino ESP8266 Arduino+RaspberryPi Simulink "
-select opt in $OPTIONS; do
-	if [ "$opt" = "Blank" ]; then
-		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_normal.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "Modbus" ]; then
-		cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_modbus.sh ../build_core.sh
-		echo [LIBMODBUS]
-		cd ..
-		cd libmodbus_src
-		./autogen.sh
-		./configure
-		sudo make install
-		sudo ldconfig
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "Fischertechnik" ]; then
-		cp ./hardware_layers/fischertechnik.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "RaspberryPi" ]; then
-		cp ./hardware_layers/raspberrypi.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "UniPi" ]; then
-		cp ./hardware_layers/unipi.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "PiXtend" ]; then
-		cp ./hardware_layers/pixtend.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-    elif [ "$opt" = "PiXtend_2S" ]; then
-		cp ./hardware_layers/pixtend2s.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "Arduino" ]; then
-		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_normal.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "ESP8266" ]; then
-		cp ./hardware_layers/esp8266.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_normal.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "Arduino+RaspberryPi" ]; then
-		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_rpi.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	elif [ "$opt" = "Simulink" ]; then
-		cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
-		cp ./core_builders/build_normal.sh ../build_core.sh
-		echo [OPENPLC]
-		cd ..
-		./build_core.sh
-		exit
-	else
-		#clear
-		echo bad option
-	fi
-done
+if [ -z "$COMM_DRIVER" ]; then
+	echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
+	echo Please select the driver you would like to use:
+	OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend PiXtend_2S Arduino ESP8266 Arduino+RaspberryPi Simulink "
+	select opt in $OPTIONS; do
+		COMM_DRIVER="$opt"
+		break
+	done
+fi
+case "$COMM_DRIVER" in
+Blank)
+	cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_normal.sh ../build_core.sh
+	cd ..
+	;;
+Modbus)
+	cp ./hardware_layers/modbus_master.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_modbus.sh ../build_core.sh
+	echo [LIBMODBUS]
+	cd ..
+	cd libmodbus_src
+	./autogen.sh
+	./configure --enable-static=yes
+	make
+	cd ..
+	;;
+Fischertechnik)
+	cp ./hardware_layers/fischertechnik.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+RaspberryPi)
+	cp ./hardware_layers/raspberrypi.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+UniPi)
+	cp ./hardware_layers/unipi.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+PiXtend)
+	cp ./hardware_layers/pixtend.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+PiXtend_2S)
+	cp ./hardware_layers/pixtend2s.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+Arduino)
+	cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_normal.sh ../build_core.sh
+	cd ..
+	;;
+ESP8266)
+	cp ./hardware_layers/esp8266.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_normal.sh ../build_core.sh
+	cd ..
+	;;
+Arduino+RaspberryPi)
+	cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_rpi.sh ../build_core.sh
+	cd ..
+	;;
+Simulink)
+	cp ./hardware_layers/simulink.cpp ./hardware_layer.cpp
+	cp ./core_builders/build_normal.sh ../build_core.sh
+	cd ..
+	;;
+*)
+	echo "Invalid driver option" 1>&2
+	exit 1
+esac
+
+echo [OPENPLC]
+./build_core.sh
+
