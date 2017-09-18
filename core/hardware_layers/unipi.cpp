@@ -173,22 +173,16 @@ void initializeHardware()
 
 //-----------------------------------------------------------------------------
 // This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex buffer_lock
+// must be updated to reflect the actual Input state. The mutex buffer_lock
 // must be used to protect access to the buffers on a threaded environment.
 //-----------------------------------------------------------------------------
-void updateBuffers()
+void updateBuffersIn()
 {
 	//printf("Digital Inputs:\n");
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	for (int i = 0; i < MAX_INPUT; i++)
 	{
 		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = !digitalRead(inputPinMask[i]); //printf("[IO%d]: %d | ", i, !digitalRead(inputPinMask[i]));
-	}
-
-	//printf("\nDigital Outputs:\n");
-	for (int i = 0; i < MAX_OUTPUT; i++)
-	{
-		if (bool_output[i/8][i%8] != NULL) digitalWrite(DOUT_PINBASE + i, *bool_output[i/8][i%8]); //printf("[IO%d]: %d | ", i, digitalRead(DOUT_PINBASE + i));
 	}
 
 	//printf("\nAnalog Inputs:");
@@ -198,7 +192,24 @@ void updateBuffers()
 	}
 	//printf("\n");
 
-	if(int_output[0] != NULL) pwmWrite(ANALOG_OUT_PIN, *int_output[0]);
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
 
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual Output state. The mutex buffer_lock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	pthread_mutex_lock(&bufferLock); //lock mutex
+
+	//printf("\nDigital Outputs:\n");
+	for (int i = 0; i < MAX_OUTPUT; i++)
+	{
+		if (bool_output[i/8][i%8] != NULL) digitalWrite(DOUT_PINBASE + i, *bool_output[i/8][i%8]); //printf("[IO%d]: %d | ", i, digitalRead(DOUT_PINBASE + i));
+	}
+	if(int_output[0] != NULL) pwmWrite(ANALOG_OUT_PIN, *int_output[0]);
+	
+	pthread_mutex_unlock(&bufferLock); //unlock mutex
+}

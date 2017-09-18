@@ -36,7 +36,7 @@
 
 #define MAX_INPUT 		14
 #define MAX_OUTPUT 		11
-#define MAX_ANALOG_OUT		1
+#define MAX_ANALOG_OUT	1
 
 /********************I/O PINS CONFIGURATION*********************
  * A good source for RaspberryPi I/O pins information is:
@@ -87,36 +87,6 @@ void initializeHardware()
 	{
 		pinMode(analogOutBufferPinMask[i], PWM_OUTPUT);
 	}
-}
-
-//-----------------------------------------------------------------------------
-// This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex buffer_lock
-// must be used to protect access to the buffers on a threaded environment.
-//-----------------------------------------------------------------------------
-void updateBuffers()
-{
-	pthread_mutex_lock(&bufferLock); //lock mutex
-
-	//INPUT
-	for (int i = 0; i < MAX_INPUT; i++)
-	{
-		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = digitalRead(inBufferPinMask[i]);
-	}
-
-	//OUTPUT
-	for (int i = 0; i < MAX_OUTPUT; i++)
-	{
-		if (bool_output[i/8][i%8] != NULL) digitalWrite(outBufferPinMask[i], *bool_output[i/8][i%8]);
-	}
-
-	//ANALOG OUT (PWM)
-	for (int i = 0; i < MAX_ANALOG_OUT; i++)
-	{
-		if (int_output[i] != NULL) pwmWrite(analogOutBufferPinMask[i], (*int_output[i] / 64));
-	}
-
-	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
 
 //-----------------------------------------------------------------------------
