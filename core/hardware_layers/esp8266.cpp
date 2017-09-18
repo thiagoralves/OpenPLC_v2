@@ -244,12 +244,22 @@ void initializeHardware()
 
 //-----------------------------------------------------------------------------
 // This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex bufferLock
+// must be updated to reflect the actual Input state. The mutex bufferLock
 // must be used to protect access to the buffers on a threaded environment.
 //-----------------------------------------------------------------------------
-void updateBuffers()
+void updateBuffersIn()
 {
 	//The thread created in initializeHardware is already updating
 	//OpenPLC's buffers. So this function should do nothing.
 }
 
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual Output state. The mutex bufferLock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	//The thread created in initializeHardware is already updating
+	//OpenPLC's buffers. So this function should do nothing.
+}

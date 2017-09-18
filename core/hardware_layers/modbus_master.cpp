@@ -486,10 +486,10 @@ void initializeHardware()
 
 //-----------------------------------------------------------------------------
 // This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex bufferLock
+// must be updated to reflect the actual Input state. The mutex bufferLock
 // must be used to protect access to the buffers on a threaded environment.
 //-----------------------------------------------------------------------------
-void updateBuffers()
+void updateBuffersIn()
 {
 	pthread_mutex_lock(&bufferLock); //lock mutex
 	pthread_mutex_lock(&ioLock);
@@ -498,6 +498,25 @@ void updateBuffers()
 	{
 		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bool_input_buf[i];
 		if (int_input[i] != NULL) *int_input[i] = int_input_buf[i];
+	}
+
+	pthread_mutex_unlock(&ioLock);
+	pthread_mutex_unlock(&bufferLock); //unlock mutex
+}
+
+
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual Output state. The mutex bufferLock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	pthread_mutex_lock(&bufferLock); //lock mutex
+	pthread_mutex_lock(&ioLock);
+
+	for (int i = 0; i < MAX_MB_IO; i++)
+	{
 		if (bool_output[i/8][i%8] != NULL) bool_output_buf[i] = *bool_output[i/8][i%8];
 		if (int_output[i] != NULL) int_output_buf[i] = *int_output[i];
 	}

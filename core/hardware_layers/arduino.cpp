@@ -560,10 +560,10 @@ void initializeHardware()
 
 //-----------------------------------------------------------------------------
 // This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex bufferLock
+// must be updated to reflect the actual Input state. The mutex bufferLock
 // must be used to protect access to the buffers on a threaded environment.
 //-----------------------------------------------------------------------------
-void updateBuffers()
+void updateBuffersIn()
 {
 	//Lock mutexes
 	pthread_mutex_lock(&bufferLock);
@@ -580,6 +580,21 @@ void updateBuffers()
 	{
 		if (int_input[i] != NULL) *int_input[i] = input_data.analog[i];
 	}
+
+	pthread_mutex_unlock(&ioLock);
+	pthread_mutex_unlock(&bufferLock);
+}
+
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual Output state. The mutex bufferLock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	//Lock mutexes
+	pthread_mutex_lock(&bufferLock);
+	pthread_mutex_lock(&ioLock);
 
 	//Digital Output
 	for (int i = 0; i < (sizeof(output_data.digital)*8); i++)

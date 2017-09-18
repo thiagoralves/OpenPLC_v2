@@ -202,27 +202,31 @@ int main(int argc,char **argv)
         printf("WARNING: Failed to lock memory\n");
     }
 #endif
-    //gets the starting point for the clock
-    printf("Getting current time\n");
-    struct timespec timer_start;
-    clock_gettime(CLOCK_MONOTONIC, &timer_start);
 
-    //======================================================
-    //                    MAIN LOOP
-    //======================================================
-    for(;;)
-    {
-        //make sure the buffer pointers are correct and
-        //attached to the user variables
-        glueVars();
-        
-        pthread_mutex_lock(&bufferLock); //lock mutex
-        config_run__(tick++);
-        pthread_mutex_unlock(&bufferLock); //unlock mutex
+	//gets the starting point for the clock
+	printf("Getting current time\n");
+	struct timespec timer_start;
+	clock_gettime(CLOCK_MONOTONIC, &timer_start);
 
-        updateBuffers();
-        updateTime();
+	//======================================================
+	//                    MAIN LOOP
+	//======================================================
+	for(;;)
+	{
+		//make sure the buffer pointers are correct and
+		//attached to the user variables
+		glueVars();
+		
+		updateBuffersIn(); //read input image
 
-        sleep_until(&timer_start, common_ticktime__);
-    }
+		pthread_mutex_lock(&bufferLock); //lock mutex
+		config_run__(tick++); // execute plc program logic
+		pthread_mutex_unlock(&bufferLock); //unlock mutex
+
+		updateBuffersOut(); //write output image
+		
+		updateTime();
+
+		sleep_until(&timer_start, common_ticktime__);
+	}
 }

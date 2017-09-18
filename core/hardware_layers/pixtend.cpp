@@ -819,10 +819,10 @@ void initializeHardware()
 
 //-----------------------------------------------------------------------------
 // This function is called by the OpenPLC in a loop. Here the internal buffers
-// must be updated to reflect the actual I/O state. The mutex buffer_lock
+// must be updated to reflect the actual Input state. The mutex buffer_lock
 // must be used to protect access to the buffers on a threaded environment.
 //-----------------------------------------------------------------------------
-void updateBuffers()
+void updateBuffersIn()
 {
 	//lock mutexes
 	pthread_mutex_lock(&bufferLock);
@@ -833,6 +833,30 @@ void updateBuffers()
 	{
 		if (bool_input[i/8][i%8] != NULL) *bool_input[i/8][i%8] = bitRead(InputData.byDigIn, i);
 	}
+
+	//ANALOG IN
+	uint16_t *analogInputs;
+	analogInputs = &InputData.wAi0;
+	for (int i = 0; i < MAX_ANALOG_IN; i++)
+	{
+		if (int_input[i] != NULL) *int_input[i] = analogInputs[i];
+	}
+
+	//unlock mutexes
+	pthread_mutex_unlock(&localBufferLock);
+	pthread_mutex_unlock(&bufferLock);
+}
+
+//-----------------------------------------------------------------------------
+// This function is called by the OpenPLC in a loop. Here the internal buffers
+// must be updated to reflect the actual Output state. The mutex buffer_lock
+// must be used to protect access to the buffers on a threaded environment.
+//-----------------------------------------------------------------------------
+void updateBuffersOut()
+{
+	//lock mutexes
+	pthread_mutex_lock(&bufferLock);
+	pthread_mutex_lock(&localBufferLock);
 
 	//DIGITAL OUTPUT
 	for (int i = 0; i < MAX_DIG_OUT; i++)
@@ -845,14 +869,6 @@ void updateBuffers()
 		{
 			if (bool_output[i/8][i%8] != NULL) bitWrite(OutputData.byRelayOut, i-6, *bool_output[i/8][i%8]);
 		}
-	}
-
-	//ANALOG IN
-	uint16_t *analogInputs;
-	analogInputs = &InputData.wAi0;
-	for (int i = 0; i < MAX_ANALOG_IN; i++)
-	{
-		if (int_input[i] != NULL) *int_input[i] = analogInputs[i];
 	}
 
 	//ANALOG OUT
