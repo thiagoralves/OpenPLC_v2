@@ -164,7 +164,8 @@ int main(int argc,char **argv)
     //              HARDWARE INITIALIZATION
     //======================================================
     initializeHardware();
-    updateBuffers();
+    updateBuffersIn();
+    updateBuffersOut();
     pthread_t modbus_thread;
     pthread_t dnp3_thread;
 
