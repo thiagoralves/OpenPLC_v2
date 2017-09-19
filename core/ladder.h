@@ -86,7 +86,9 @@ void updateTime();
 
 //hardware_layer.cpp
 void initializeHardware();
-void updateBuffers();
+//void updateBuffers();
+void updateBuffersIn();
+void updateBuffersOut();
 
 //main.cpp
 void sleep_thread(int milliseconds);
