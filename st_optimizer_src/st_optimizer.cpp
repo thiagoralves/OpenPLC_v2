@@ -46,9 +46,12 @@ bool is_IF_statement(const string &line)
 			break;
 	}
 	
-	if (line.at(i) == 'I' && line.at(i+1) == 'F' && line.at(i+2) == ' ')
+	if (line.size() >= 3)
 	{
-		return true;
+		if (line.at(i) == 'I' && line.at(i+1) == 'F' && line.at(i+2) == ' ')
+		{
+			return true;
+		}
 	}
 	return false;
 }
@@ -65,9 +68,12 @@ bool is_END_IF_statement(const string &line)
 			break;
 	}
 	
-	if (line.at(i) == 'E' && line.at(i+1) == 'N' && line.at(i+2) == 'D' && line.at(i+3) == '_' && line.at(i+4) == 'I' && line.at(i+5) == 'F' && line.at(i+6) == ';')
+	if (line.size() >= 7)
 	{
-		return true;
+		if (line.at(i) == 'E' && line.at(i+1) == 'N' && line.at(i+2) == 'D' && line.at(i+3) == '_' && line.at(i+4) == 'I' && line.at(i+5) == 'F' && line.at(i+6) == ';')
+		{
+			return true;
+		}
 	}
 	return false;
 }
@@ -111,7 +117,7 @@ int main(int argc, char *argv[])
 					//also store it in the list_of_IFs vector
 					string if_statement(line);
 					list_of_IFs.push_back(line);
-					final_program.append(line);
+					final_program.append(line + "\n");
 					
 					//This while loop will copy all contents of the IF statement until it finds the
 					//END_IF terminator. Note: It will ignore sub-level IF statements
@@ -126,7 +132,7 @@ int main(int argc, char *argv[])
 						if (count_for_break == 0)
 							break;
 						
-						final_program.append(line);
+						final_program.append(line + "\n");
 					}
 					
 					string end_if(line);
@@ -147,7 +153,7 @@ int main(int argc, char *argv[])
 								if (count_for_break == 0)
 									break;
 								
-								final_program.append(line);
+								final_program.append(line + "\n");
 							}
 						}
 					}
@@ -160,7 +166,7 @@ int main(int argc, char *argv[])
 					{
 						getline(stfile, line);
 					}
-					final_program.append(end_if);
+					final_program.append(end_if + "\n");
 				}
 				else
 				{
@@ -180,7 +186,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				final_program.append(line);
+				final_program.append(line + "\n");
 			}
 		}
 		
