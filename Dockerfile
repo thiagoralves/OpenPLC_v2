@@ -11,7 +11,7 @@ WORKDIR /usr/local/src/OpenPLC
 RUN find . -type f -exec dos2unix {} \;
 
 # Build the OpenPLC project
-RUN echo "1" | bash /usr/local/src/OpenPLC/build.sh
+RUN printf "n\n1\n" | bash /usr/local/src/OpenPLC/build.sh
 
 #Start the server
 CMD sudo nodejs server.js
