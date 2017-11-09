@@ -68,7 +68,7 @@ bool is_END_IF_statement(const string &line)
 			break;
 	}
 	
-	if (line.size() >= 7)
+	if (line.size() >= 7 + i)
 	{
 		if (line.at(i) == 'E' && line.at(i+1) == 'N' && line.at(i+2) == 'D' && line.at(i+3) == '_' && line.at(i+4) == 'I' && line.at(i+5) == 'F' && line.at(i+6) == ';')
 		{
