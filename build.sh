@@ -2,14 +2,14 @@
 echo Building OpenPLC environment:
 
 echo [MATIEC COMPILER]
-cd matiec_src
-autoreconf -i
-./configure
-make
+#cd matiec_src
+#autoreconf -i
+#./configure
+#make
 
 echo [LADDER]
-cd ..
-cp ./matiec_src/iec2c ./
+#cd ..
+#cp ./matiec_src/iec2c ./
 ./iec2c ./st_files/blank_program.st
 mv -f POUS.c POUS.h LOCATED_VARIABLES.h VARIABLES.csv Config0.c Config0.h Res0.c ./core/
 
@@ -71,7 +71,7 @@ rm -f ./hardware_layer.cpp
 rm -f ../build_core.sh
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
-OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend Arduino ESP8266 Arduino+RaspberryPi Simulink "
+OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend PiXtend_2S Arduino ESP8266 Arduino+RaspberryPi Simulink "
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
@@ -117,6 +117,13 @@ select opt in $OPTIONS; do
 		exit
 	elif [ "$opt" = "PiXtend" ]; then
 		cp ./hardware_layers/pixtend.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_rpi.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
+		exit
+    elif [ "$opt" = "PiXtend_2S" ]; then
+		cp ./hardware_layers/pixtend2s.cpp ./hardware_layer.cpp
 		cp ./core_builders/build_rpi.sh ../build_core.sh
 		echo [OPENPLC]
 		cd ..
