@@ -2,14 +2,14 @@
 echo Building OpenPLC environment:
 
 echo [MATIEC COMPILER]
-#cd matiec_src
-#autoreconf -i
-#./configure
-#make
+cd matiec_src
+autoreconf -i
+./configure
+make
 
 echo [LADDER]
-#cd ..
-#cp ./matiec_src/iec2c ./
+cd ..
+cp ./matiec_src/iec2c ./
 ./iec2c ./st_files/blank_program.st
 mv -f POUS.c POUS.h LOCATED_VARIABLES.h VARIABLES.csv Config0.c Config0.h Res0.c ./core/
 
