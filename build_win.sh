@@ -33,7 +33,7 @@ rm -f ../build_core.sh
 
 echo The OpenPLC needs a driver to be able to control physical or virtual hardware.
 echo Please select the driver you would like to use:
-OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend Arduino ESP8266 Arduino+RaspberryPi Simulink "
+OPTIONS="Blank Modbus Fischertechnik RaspberryPi UniPi PiXtend PiXtend_2S Arduino ESP8266 Arduino+RaspberryPi Simulink "
 select opt in $OPTIONS; do
 	if [ "$opt" = "Blank" ]; then
 		cp ./hardware_layers/blank.cpp ./hardware_layer.cpp
@@ -88,6 +88,13 @@ select opt in $OPTIONS; do
 		cd ..
 		./build_core.sh
 		echo 'export PATH=$PATH:"/cygdrive/c/Program Files/nodejs/"' >> ~/.bashrc
+		exit
+    elif [ "$opt" = "PiXtend_2S" ]; then
+		cp ./hardware_layers/pixtend2s.cpp ./hardware_layer.cpp
+		cp ./core_builders/build_rpi.sh ../build_core.sh
+		echo [OPENPLC]
+		cd ..
+		./build_core.sh
 		exit
 	elif [ "$opt" = "Arduino" ]; then
 		cp ./hardware_layers/arduino.cpp ./hardware_layer.cpp
