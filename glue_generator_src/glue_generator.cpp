@@ -52,6 +52,10 @@ extern unsigned long long common_ticktime__;\r\n\
 IEC_BOOL *bool_input[BUFFER_SIZE][8];\r\n\
 IEC_BOOL *bool_output[BUFFER_SIZE][8];\r\n\
 \r\n\
+//Bytes\r\n\
+IEC_BYTE *byte_input[BUFFER_SIZE];\r\n\
+IEC_BYTE *byte_output[BUFFER_SIZE];\r\n\
+\r\n\
 //Analog I/O\r\n\
 IEC_UINT *int_input[BUFFER_SIZE];\r\n\
 IEC_UINT *int_output[BUFFER_SIZE];\r\n\
@@ -175,6 +179,9 @@ void glueVar(char *varName, char *varType)
 			case 'X':
 				glueVars << "\tbool_input[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
 				break;
+			case 'B':
+				glueVars << "\tbyte_input[" << pos1 << "] = " << varName << ";\r\n";
+				break;
 			case 'W':
 				glueVars << "\tint_input[" << pos1 << "] = " << varName << ";\r\n";
 				break;
@@ -187,6 +194,9 @@ void glueVar(char *varName, char *varType)
 		{
 			case 'X':
 				glueVars << "\tbool_output[" << pos1 << "][" << pos2 << "] = " << varName << ";\r\n";
+				break;
+           		case 'B':
+				glueVars << "\tbyte_output[" << pos1 << "] = " << varName << ";\r\n";
 				break;
 			case 'W':
 				glueVars << "\tint_output[" << pos1 << "] = " << varName << ";\r\n";
