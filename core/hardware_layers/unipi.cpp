@@ -43,7 +43,7 @@
 
 const int inputPinMask[MAX_INPUT] = { 7, 7, 0, 2, 4, 3, 5, 14, 11, 10, 13, 6, 12 };
 int adc_fd;
-int adcBuffer[2];
+unsigned int adcBuffer[2];
 
 pthread_mutex_t adcBufferLock; //mutex for the internal ADC buffer
 
@@ -65,7 +65,8 @@ void *readAdcThread(void *args)
 	{
 		unsigned char config;
 		unsigned char i2c_data[4];
-		int value = 0;
+		unsigned int value = 0;
+        double conversion;
 		bool conversionInProgress;
 
 		/*
@@ -95,6 +96,9 @@ void *readAdcThread(void *args)
 				sleep_ms(1);
 		}
 		value = (i2c_data [0] << 8) | i2c_data [1];
+        conversion = value*2.28;
+        if (conversion > 65535.0) {conversion=65535.0;}
+        value = (unsigned int)conversion;
 		pthread_mutex_lock(&adcBufferLock);
 		adcBuffer[0] = value;
 		pthread_mutex_unlock(&adcBufferLock);
@@ -112,6 +116,9 @@ void *readAdcThread(void *args)
 				sleep_ms(1);
 		}
 		value = (i2c_data [0] << 8) | i2c_data [1];
+        conversion = value*2.28;
+        if (conversion > 65535.0) {conversion=65535.0;}
+        value = (unsigned int)conversion;
 		pthread_mutex_lock(&adcBufferLock);
 		adcBuffer[1] = value;
 		pthread_mutex_unlock(&adcBufferLock);
@@ -153,6 +160,10 @@ void initializeHardware()
 	wiringPiSetup();
 	mcp_adcSetup(0x68); //ADC I2C address configuration
 	mcp23008Setup(DOUT_PINBASE, 0x20); //Digital out I2C configuration
+    
+    pwmSetMode(PWM_MODE_MS);
+    pwmSetClock(47);
+    pwmSetRange(1024);
 
 	for (int i = 0; i < MAX_OUTPUT; i++)
 	{
@@ -209,7 +220,7 @@ void updateBuffersOut()
 	{
 		if (bool_output[i/8][i%8] != NULL) digitalWrite(DOUT_PINBASE + i, *bool_output[i/8][i%8]); //printf("[IO%d]: %d | ", i, digitalRead(DOUT_PINBASE + i));
 	}
-	if(int_output[0] != NULL) pwmWrite(ANALOG_OUT_PIN, *int_output[0]);
+	if(int_output[0] != NULL) pwmWrite(ANALOG_OUT_PIN, (*int_output[0] / 64));
 	
 	pthread_mutex_unlock(&bufferLock); //unlock mutex
 }
