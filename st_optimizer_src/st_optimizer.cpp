@@ -46,7 +46,7 @@ bool is_IF_statement(const string &line)
 			break;
 	}
 	
-	if (line.size() >= 3)
+	if (line.size() >= 3 && i < line.length())
 	{
 		if (line.at(i) == 'I' && line.at(i+1) == 'F' && line.at(i+2) == ' ')
 		{
