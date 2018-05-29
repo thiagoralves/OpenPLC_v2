@@ -41,7 +41,7 @@ if [ "$DNP3_SUPPORT" = "Y" -o "$DNP3_SUPPORT" = "y" -o "$DNP3_SUPPORT" = "yes" ]
 	sudo apt-get install cmake
 
 	#download opendnp3
-	git clone --recursive https://github.com/automatak/dnp3.git
+	#git clone --recursive https://github.com/automatak/dnp3.git
 	cd dnp3
 
 	#create swapfile to prevent out of memory errors
