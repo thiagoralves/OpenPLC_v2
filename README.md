@@ -7,7 +7,12 @@ There is a NodeJS application that works as a http server for the user to upload
 
 You must have NodeJS and WiringPi (in case you are using Raspberry Pi) installed to use this program. Usage:
 
-1) ./build.sh
+1) Install required packages:
+sudo apt-get update
+sudo apt-get install build-essential pkg-config bison flex
+sudo apt-get install autoconf automake libtool make nodejs git
+
+2) ./build.sh
 
 2) sudo nodejs server.js
 
