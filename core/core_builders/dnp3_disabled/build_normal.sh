@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 cd core
 echo Generating object files...
 g++ -I ./lib -c Config0.c
@@ -8,3 +11,4 @@ echo Generating glueVars.cpp
 echo Compiling main program
 g++ *.cpp *.o -o openplc -I ./lib -pthread -fpermissive
 cd ..
+
